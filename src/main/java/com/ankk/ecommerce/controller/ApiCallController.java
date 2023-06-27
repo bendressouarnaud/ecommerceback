@@ -50,6 +50,8 @@ public class ApiCallController {
     @Autowired
     SousproduitRepository sousproduitRepository;
     @Autowired
+    ArticleRepository articleRepository;
+    @Autowired
     ProduitRepository produitRepository;
     @Autowired
     JwtUtil jwtUtil;
@@ -182,16 +184,36 @@ public class ApiCallController {
     @CrossOrigin("*")
     @GetMapping(value="/getAllProduits")
     private List<Produit> getAllProduits(){
-        List<Produit> lte = produitRepository.findAll();
-        lte.forEach(
+        return produitRepository.findAll();
+        /*lte.forEach(
                 d -> {
                     String tp = d.getLienweb();
                     d.setLienweb("https://firebasestorage.googleapis.com/v0/b/gestionpanneaux.appspot.com/o/"+
                             tp+"?alt=media");
                 }
         );
-        return lte;
+        return lte;*/
     }
+
+    @CrossOrigin("*")
+    @GetMapping(value="/getsousproduitlib")
+    private List<Beansousproduit> getsousproduitlib(){
+        List<Sousproduit> lte = sousproduitRepository.findAll();
+        List<Beansousproduit> ret = new ArrayList<>();
+        lte.forEach(
+                d -> {
+                    Beansousproduit bt = new Beansousproduit();
+                    bt.setIdspr(d.getIdspr());
+                    bt.setLibelle(d.getLibelle());
+                    bt.setLienweb("");
+                    Produit pt = produitRepository.findByIdprd(d.getIdprd());
+                    bt.setProduit(String.valueOf(pt.getIdprd()));
+                    ret.add(bt);
+                }
+        );
+        return ret;
+    }
+
 
     @CrossOrigin("*")
     @GetMapping(value="/gethistoriquesproduits")
@@ -203,8 +225,7 @@ public class ApiCallController {
                     Beansousproduit bt = new Beansousproduit();
                     bt.setIdspr(d.getIdspr());
                     bt.setLibelle(d.getLibelle());
-                    bt.setLienweb("https://firebasestorage.googleapis.com/v0/b/gestionpanneaux.appspot.com/o/"+
-                            d.getLienweb()+"?alt=media");
+                    bt.setLienweb(d.getLienweb());
                     Produit pt = produitRepository.findByIdprd(d.getIdprd());
                     bt.setProduit(pt.getLibelle());
                     ret.add(bt);
@@ -359,6 +380,62 @@ public class ApiCallController {
         return  re;
     }
 
+
+    @CrossOrigin("*")
+    @PostMapping("/savearticles")
+    public Reponse savearticles(@RequestParam("article") MultipartFile multipartFile,
+        @RequestParam(name="id") Integer idart,
+        @RequestParam(name="idspr") Integer idspr,
+        @RequestParam(name="libelle") String libelle,
+        @RequestParam(name="prix") Integer prix,
+        @RequestParam(name="publication") String publication,
+        @RequestParam(name="detail") String detail,
+        HttpServletRequest request
+    ) {
+
+        String identifiant = getBackUserConnectedName(request);
+
+        //
+        EntityManager emr = emf.createEntityManager();
+        emr.getTransaction().begin();
+
+        // Demande de Rapports :
+        StoredProcedureQuery procedureQuery = emr
+                .createStoredProcedureQuery("findUserByIdentifier");
+        procedureQuery.registerStoredProcedureParameter("id",
+                String.class, ParameterMode.IN);
+        procedureQuery.setParameter("id", identifiant);
+        procedureQuery.registerStoredProcedureParameter("keyword",
+                String.class, ParameterMode.IN);
+        procedureQuery.setParameter("keyword", "K8_jemange");
+        List<Object[]> resultat = procedureQuery.getResultList();
+
+        // Close :
+        emr.getTransaction().commit();
+        emr.close();
+
+        Utilisateur ur = null;
+        if(resultat.size() > 0) {
+            ur = utilisateurRepository.findByIdentifiant(String.valueOf(resultat.get(0)[1]));
+        }
+
+        Article ae = new Article();
+        ae.setLibelle(libelle);
+        ae.setDetail(detail);
+        ae.setIdent(ur.getIdent());
+        ae.setIdspr(idspr);
+        ae.setPrix(prix);
+
+        fileService.upload(multipartFile, libelle, 2, 0, ae);
+        Reponse re = new Reponse();
+        re.setElement("OK");
+        re.setIdentifiant("OK");
+        re.setProfil("OK");
+        return  re;
+    }
+
+
+
     @CrossOrigin("*")
     @GetMapping(value="/parametresconnexion")
     private List<ReponseUser> parametresconnexion(@RequestParam(value="identifiant") String identifiant){
@@ -395,6 +472,160 @@ public class ApiCallController {
         rse.setIdentifiant("");
         userListe.add(rse);
         return userListe;
+    }
+
+
+    /* enregistrerUser */
+    @CrossOrigin("*")
+    @GetMapping(value="/enregistrerUser")
+    private Reponse enregistrerUser(
+            @RequestParam(value="nom") String nom,
+            @RequestParam(value="prenom") String prenom,
+            @RequestParam(value="contact") String contact,
+            @RequestParam(value="email") String email,
+            @RequestParam(value="profil") Integer profil,
+            HttpServletRequest request
+    ){
+        //
+        Reponse rse = new Reponse();
+        //
+        String identifiant = getBackUserConnectedName(request);
+
+        //
+        EntityManager emr = emf.createEntityManager();
+        emr.getTransaction().begin();
+
+        // Demande de Rapports :
+        StoredProcedureQuery procedureQuery = emr
+                .createStoredProcedureQuery("findUserByIdentifier");
+        procedureQuery.registerStoredProcedureParameter("id",
+                String.class, ParameterMode.IN);
+        procedureQuery.setParameter("id", identifiant);
+        procedureQuery.registerStoredProcedureParameter("keyword",
+                String.class, ParameterMode.IN);
+        procedureQuery.setParameter("keyword", "K8_jemange");
+        List<Object[]> resultat = procedureQuery.getResultList();
+
+        // Close :
+        emr.getTransaction().commit();
+        emr.close();
+
+        Utilisateur ur = null;
+        if(resultat.size() > 0) {
+            ur = utilisateurRepository.findByIdentifiant(String.valueOf(resultat.get(0)[1]));
+        }
+        /******************/
+
+        Utilisateur usr = utilisateurRepository.findByEmail(email.trim()); //
+        if(usr == null){
+            // new ONE :
+            usr = new Utilisateur();
+
+            //
+            String[] valeur = email.split("@");
+            // Limit 'identifiant' length :
+            usr.setIdentifiant(valeur[0].length() > 15 ? valeur[0].substring(0,14) : valeur[0]);
+            String heure = new SimpleDateFormat("HH:mm:ss").format(new Date());
+            //usr.setMotdepasse("0000");
+            usr.setMotdepasse(heure.replace(":",""));
+
+            usr.setNom(nom);
+            usr.setPrenom(prenom);
+            usr.setContact(contact);
+            usr.setEmail(email);
+            usr.setProfil(profil);
+            usr.setToken("");
+            usr.setFcmtoken("");
+            usr.setIdent(ur.getIdent());
+
+            //
+            int iduser = utilisateurRepository.save(usr).getIduser();
+
+            rse.setElement("ok");
+            rse.setProfil("ok");
+            rse.setIdentifiant("ok");
+
+            // By default, hit 'Parametresmob' table for each new USER :
+            /*Parametresmob pb = new Parametresmob();
+            pb.setEmail(email);
+            pb.setDelai(120);
+            pb.setIduser(iduser);
+            pb.setParun("");
+            pb.setPardeux(0);
+            parametresmobRepository.save(pb);
+
+            // Send a mail :
+            if(profil != 2) {
+                tachesService.mailCreationNew("Création de compte", usr.getIdentifiant(),
+                        heure.replace(":", ""), email);
+            }
+            else tachesService.mailCreationNew("Création de compte", usr.getIdentifiant(),
+                    heure.replace(":", ""), email, 0);
+
+            // Track  :
+            tachesService.trackJournal("Utilisateur a créé un compte utilisateur",
+                    ur.getIduser());*/
+        }
+        else{
+            // exist. Warn :
+            rse.setElement("pok");
+            rse.setProfil("pok");
+            rse.setIdentifiant("pok");
+        }
+
+        return rse;
+    }
+
+    /* enregistrerUser */
+    @CrossOrigin("*")
+    @GetMapping(value="/getcompanyarticles")
+    private List<Beanarticle> getcompanyarticles(
+            HttpServletRequest request
+    ) {
+        //
+        String identifiant = getBackUserConnectedName(request);
+        //
+        EntityManager emr = emf.createEntityManager();
+        emr.getTransaction().begin();
+
+        // Demande de Rapports :
+        StoredProcedureQuery procedureQuery = emr
+                .createStoredProcedureQuery("findUserByIdentifier");
+        procedureQuery.registerStoredProcedureParameter("id",
+                String.class, ParameterMode.IN);
+        procedureQuery.setParameter("id", identifiant);
+        procedureQuery.registerStoredProcedureParameter("keyword",
+                String.class, ParameterMode.IN);
+        procedureQuery.setParameter("keyword", "K8_jemange");
+        List<Object[]> resultat = procedureQuery.getResultList();
+
+        // Close :
+        emr.getTransaction().commit();
+        emr.close();
+
+        Utilisateur ur = null;
+        if(resultat.size() > 0) {
+            ur = utilisateurRepository.findByIdentifiant(String.valueOf(resultat.get(0)[1]));
+        }
+
+        // Now pick articles :
+        List<Beanarticle> ret = new ArrayList<>();
+        List<Article> listArticle = articleRepository.findAllByIdent(ur.getIdent());
+        listArticle.forEach(
+                d -> {
+                    Beanarticle be = new Beanarticle();
+                    be.setIdart(d.getIdart());
+                    be.setLibelle(d.getLibelle());
+                    be.setPrix(d.getPrix());
+                    be.setLienweb(d.getLienweb());
+                    // Sous produit
+                    Sousproduit st = sousproduitRepository.findByIdspr(d.getIdspr());
+                    be.setAppartenance(st.getLibelle());
+                    ret.add(be);
+                }
+        );
+
+        return ret;
     }
 
     @PostMapping("/profile/pic/{fileName}")

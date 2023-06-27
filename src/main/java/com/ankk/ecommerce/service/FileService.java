@@ -1,7 +1,9 @@
 package com.ankk.ecommerce.service;
 
+import com.ankk.ecommerce.models.Article;
 import com.ankk.ecommerce.models.Produit;
 import com.ankk.ecommerce.models.Sousproduit;
+import com.ankk.ecommerce.repositories.ArticleRepository;
 import com.ankk.ecommerce.repositories.ProduitRepository;
 import com.ankk.ecommerce.repositories.SousproduitRepository;
 import com.google.auth.Credentials;
@@ -20,6 +22,8 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.UUID;
 
 @Service
@@ -28,17 +32,20 @@ public class FileService {
     @Value("${app.firebase-config}")
     private String firebaseConfig;
     @Autowired
+    ArticleRepository articleRepository;
+    @Autowired
     SousproduitRepository sousproduitRepository;
     @Autowired
     ProduitRepository produitRepository;
 
 
-    public void upload(MultipartFile multipartFile, String libproduit, int mode, int idprd) {
+    public void upload(MultipartFile multipartFile, String libproduit, int mode, int idprd,
+                       Article... articles) {
         try {
             String fileName = multipartFile.getOriginalFilename();                        // to get original file name
             fileName = UUID.randomUUID().toString().concat(this.getExtension(fileName));  // to generated random string values for file name.
             File file = this.convertToFile(multipartFile, fileName);                      // to convert multipartFile to File
-            this.uploadFile(file, fileName, libproduit, mode, idprd);                                   // to get uploaded file link
+            this.uploadFile(file, fileName, libproduit, mode, idprd, articles);                                   // to get uploaded file link
             file.delete();                                                                // to delete the copy of uploaded file stored in the project folder
         } catch (Exception e) {
             System.out.println("Exception : " + e.toString());
@@ -57,7 +64,7 @@ public class FileService {
 
 
     private void uploadFile(File file, String fileName, String libproduit
-            , int mode, int idprd) throws IOException {
+            , int mode, int idprd, Article... art) throws IOException {
         BlobId blobId = BlobId.of("gestionpanneaux.appspot.com", (fileName));
         //BlobId blobId = BlobId.of("gestionpanneaux.appspot.com", ("produits/"+fileName));
         BlobInfo blobInfo = BlobInfo.newBuilder(blobId).setContentType("media").build();
@@ -77,11 +84,33 @@ public class FileService {
                 break;
 
             case 1:
+                // Sous-Produit
                 Sousproduit st = new Sousproduit();
                 st.setLibelle(libproduit);
                 st.setLienweb(lienweb);
                 st.setIdprd(idprd);
                 sousproduitRepository.save(st);
+                break;
+
+            case 2:
+                // Article
+                Article ar = new Article();
+                ar.setLibelle(art[0].getLibelle());
+                ar.setDetail(art[0].getDetail());
+                ar.setIdent(art[0].getIdent());
+                ar.setIdspr(art[0].getIdspr());
+                ar.setPrix(art[0].getPrix());
+                ar.setLienweb(lienweb);
+                // Set date :
+                try{
+                    String dte = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+                    Date dateAujourdhui = new SimpleDateFormat("yyyy-MM-dd").parse(dte);
+                    ar.setPublication(dateAujourdhui);
+                }
+                catch (Exception e){
+                    ar.setPublication(null);
+                }
+                articleRepository.save(ar);
                 break;
         }
 
