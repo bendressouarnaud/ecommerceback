@@ -34,4 +34,10 @@ public class Article {
 
     @Column(name = "idspr")
     private Integer idspr;
+
+    @Column(name = "quantite")
+    private Integer quantite;
+
+    @Column(name = "choix")
+    private Integer choix;
 }

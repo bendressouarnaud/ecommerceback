@@ -101,6 +101,8 @@ public class FileService {
                 ar.setIdspr(art[0].getIdspr());
                 ar.setPrix(art[0].getPrix());
                 ar.setLienweb(lienweb);
+                ar.setQuantite(0);
+                ar.setChoix(1);
                 // Set date :
                 try{
                     String dte = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
