@@ -621,6 +621,9 @@ public class ApiCallController {
                     // Sous produit
                     Sousproduit st = sousproduitRepository.findByIdspr(d.getIdspr());
                     be.setAppartenance(st.getLibelle());
+                    //
+                    be.setQuantite(d.getQuantite());
+                    be.setChoix(d.getChoix());
                     ret.add(be);
                 }
         );
