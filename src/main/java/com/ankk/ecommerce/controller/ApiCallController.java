@@ -182,7 +182,7 @@ public class ApiCallController {
 
 
     @CrossOrigin("*")
-    @GetMapping(value="/getAllProduits")
+    @GetMapping(value={"/getAllProduits","/getmobileAllProduits"})
     private List<Produit> getAllProduits(){
         return produitRepository.findAll();
         /*lte.forEach(
@@ -196,7 +196,7 @@ public class ApiCallController {
     }
 
     @CrossOrigin("*")
-    @GetMapping(value="/getsousproduitlib")
+    @GetMapping(value={"/getsousproduitlib"})
     private List<Beansousproduit> getsousproduitlib(){
         List<Sousproduit> lte = sousproduitRepository.findAll();
         List<Beansousproduit> ret = new ArrayList<>();
@@ -216,7 +216,7 @@ public class ApiCallController {
 
 
     @CrossOrigin("*")
-    @GetMapping(value="/gethistoriquesproduits")
+    @GetMapping(value={"/gethistoriquesproduits"})
     private List<Beansousproduit> gethistoriquesproduits(){
         List<Sousproduit> lte = sousproduitRepository.findAll();
         List<Beansousproduit> ret = new ArrayList<>();

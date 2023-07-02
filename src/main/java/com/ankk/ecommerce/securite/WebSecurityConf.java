@@ -49,7 +49,8 @@ public class WebSecurityConf extends WebSecurityConfigurerAdapter {
         http.cors().and().csrf().disable()
                 .authorizeRequests().antMatchers(
                         "/authentification","/getmotifs",
-                        "/authmobileusermac/**"
+                        "/authmobileusermac/**",
+                        "/getmobileAllProduits"
                 ).permitAll().anyRequest().authenticated()
                 .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
