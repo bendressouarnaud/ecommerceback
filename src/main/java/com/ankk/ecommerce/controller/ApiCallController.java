@@ -235,6 +235,25 @@ public class ApiCallController {
     }
 
     @CrossOrigin("*")
+    @GetMapping(value={"/getmobileallsousproduits"})
+    private List<Beansousproduit> getmobileallsousproduits(@RequestBody RequeteBean rn){
+        List<Sousproduit> lte = sousproduitRepository.findAllByIdprd(rn.getIdprd());
+        List<Beansousproduit> ret = new ArrayList<>();
+        lte.forEach(
+                d -> {
+                    Beansousproduit bt = new Beansousproduit();
+                    bt.setIdspr(d.getIdspr());
+                    bt.setLibelle(d.getLibelle());
+                    bt.setLienweb(d.getLienweb());
+                    Produit pt = produitRepository.findByIdprd(d.getIdprd());
+                    bt.setProduit(pt.getLibelle());
+                    ret.add(bt);
+                }
+        );
+        return ret;
+    }
+
+    @CrossOrigin("*")
     @GetMapping(value="/enregistrerPartenaire")
     private Reponse enregistrerPartenaire(
             @RequestParam(value="ident") Integer ident,
