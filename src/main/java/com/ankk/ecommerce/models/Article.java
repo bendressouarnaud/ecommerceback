@@ -32,8 +32,8 @@ public class Article {
     @Column(name = "lienweb")
     private String lienweb;
 
-    @Column(name = "idspr")
-    private Integer idspr;
+    @Column(name = "iddet")
+    private Integer iddet;
 
     @Column(name = "quantite")
     private Integer quantite;

@@ -8,7 +8,7 @@ import java.util.List;
 public interface ArticleRepository extends CrudRepository<Article, Integer> {
 
     List<Article> findAllByIdent(int ident);
-    List<Article> findAllByIdentAndIdspr(int ident, int idspr);
-    List<Article> findAllByIdspr(int idspr);
+    List<Article> findAllByIdentAndIddet(int ident, int iddet);
+    List<Article> findAllByIddet(int iddet);
 
 }

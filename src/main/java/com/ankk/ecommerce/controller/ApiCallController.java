@@ -54,6 +54,8 @@ public class ApiCallController {
     @Autowired
     ProduitRepository produitRepository;
     @Autowired
+    DetailRepository detailRepository;
+    @Autowired
     JwtUtil jwtUtil;
     @Value("${app.firebase-config}")
     private String firebaseConfig;
@@ -182,6 +184,13 @@ public class ApiCallController {
 
 
     @CrossOrigin("*")
+    @GetMapping(value={"/getAllDetails","/getmobileAllDetails"})
+    private List<Detail> getAllDetails(){
+        return detailRepository.findAll();
+    }
+
+
+    @CrossOrigin("*")
     @GetMapping(value={"/getAllProduits","/getmobileAllProduits"})
     private List<Produit> getAllProduits(){
         return produitRepository.findAll();
@@ -194,6 +203,14 @@ public class ApiCallController {
         );
         return lte;*/
     }
+
+
+    @CrossOrigin("*")
+    @GetMapping(value={"/getsousproduitdata"})
+    private List<Sousproduit> getsousproduitdata(){
+        return sousproduitRepository.findAll();
+    }
+
 
     @CrossOrigin("*")
     @GetMapping(value={"/getsousproduitlib"})
@@ -234,20 +251,50 @@ public class ApiCallController {
         return ret;
     }
 
+
     @CrossOrigin("*")
-    @GetMapping(value={"/getmobileallsousproduits"})
-    private List<Beansousproduit> getmobileallsousproduits(@RequestBody RequeteBean rn){
-        List<Sousproduit> lte = sousproduitRepository.findAllByIdprd(rn.getIdprd());
-        List<Beansousproduit> ret = new ArrayList<>();
+    @GetMapping(value={"/gethistoriquesdetails"})
+    private List<Beandetail> gethistoriquesdetails(){
+        List<Detail> lte = detailRepository.findAll();
+        List<Beandetail> ret = new ArrayList<>();
         lte.forEach(
                 d -> {
-                    Beansousproduit bt = new Beansousproduit();
-                    bt.setIdspr(d.getIdspr());
-                    bt.setLibelle(d.getLibelle());
-                    bt.setLienweb(d.getLienweb());
-                    Produit pt = produitRepository.findByIdprd(d.getIdprd());
-                    bt.setProduit(pt.getLibelle());
-                    ret.add(bt);
+                    Beandetail bl = new Beandetail();
+                    bl.setIddet(d.getIddet());
+                    bl.setLibelle(d.getLibelle());
+                    bl.setLienweb(d.getLienweb());
+                    Sousproduit st = sousproduitRepository.findByIdspr(d.getIdspr());
+                    bl.setSousproduit(st.getLibelle());
+                    Produit pt = produitRepository.findByIdprd(st.getIdprd());
+                    bl.setProduit(pt.getLibelle());
+                    ret.add(bl);
+                }
+        );
+        return ret;
+    }
+
+
+    @CrossOrigin("*")
+    @PostMapping(value={"/getmobileallsousproduits"})
+    private List<Beancategorie> getmobileallsousproduits(@RequestBody RequeteBean rn){
+        List<Sousproduit> lte = sousproduitRepository.findAllByIdprd(rn.getIdprd());
+        List<Beancategorie> ret = new ArrayList<>();
+        lte.forEach(
+                d -> {
+                    Beancategorie be = new Beancategorie();
+                    be.setSousproduit(d.getLibelle());
+                    // For each SOUS-PRODUIT, get its details :
+                    List<Detail> lesDets = detailRepository.findAllByIdspr(d.getIdspr());
+                    lesDets.forEach(
+                        s -> {
+                            be.getDetails().add(s);
+                        }
+                    );
+
+                    // Check before adding :
+                    if(!be.getDetails().isEmpty()){
+                        ret.add(be);
+                    }
                 }
         );
         return ret;
@@ -376,7 +423,7 @@ public class ApiCallController {
     public Reponse savepoducts(@RequestParam("produit") MultipartFile multipartFile,
                           @RequestParam(name="libelle") String libelle) {
         //System.out.println("Libelle : "+libelle);
-        fileService.upload(multipartFile, libelle, 0, 0);
+        fileService.upload(multipartFile, libelle, 0, 0, null, null);
         Reponse re = new Reponse();
         re.setElement("OK");
         re.setIdentifiant("OK");
@@ -391,7 +438,27 @@ public class ApiCallController {
                           @RequestParam(name="idprd") Integer idprd
     ) {
         //System.out.println("Libelle : "+libelle);
-        fileService.upload(multipartFile, libelle, 1, idprd);
+        fileService.upload(multipartFile, libelle, 1, idprd, null, null);
+        Reponse re = new Reponse();
+        re.setElement("OK");
+        re.setIdentifiant("OK");
+        re.setProfil("OK");
+        return  re;
+    }
+
+
+    @CrossOrigin("*")
+    @PostMapping("/savedetails")
+    public Reponse savedetails(@RequestParam("detail") MultipartFile multipartFile,
+                                   @RequestParam(name="libelle") String libelle,
+                                   @RequestParam(name="idspr") Integer idspr
+    ) {
+        // Set DETAIL :
+        Detail dl = new Detail();
+        dl.setIdspr(idspr);
+        dl.setLibelle(libelle);
+
+        fileService.upload(multipartFile, libelle, 3, 0, null, dl);
         Reponse re = new Reponse();
         re.setElement("OK");
         re.setIdentifiant("OK");
@@ -404,7 +471,7 @@ public class ApiCallController {
     @PostMapping("/savearticles")
     public Reponse savearticles(@RequestParam("article") MultipartFile multipartFile,
         @RequestParam(name="id") Integer idart,
-        @RequestParam(name="idspr") Integer idspr,
+        @RequestParam(name="iddet") Integer iddet,
         @RequestParam(name="libelle") String libelle,
         @RequestParam(name="prix") Integer prix,
         @RequestParam(name="publication") String publication,
@@ -442,10 +509,10 @@ public class ApiCallController {
         ae.setLibelle(libelle);
         ae.setDetail(detail);
         ae.setIdent(ur.getIdent());
-        ae.setIdspr(idspr);
+        ae.setIddet(iddet); //
         ae.setPrix(prix);
 
-        fileService.upload(multipartFile, libelle, 2, 0, ae);
+        fileService.upload(multipartFile, libelle, 2, 0, ae, null);
         Reponse re = new Reponse();
         re.setElement("OK");
         re.setIdentifiant("OK");
@@ -637,9 +704,9 @@ public class ApiCallController {
                     be.setLibelle(d.getLibelle());
                     be.setPrix(d.getPrix());
                     be.setLienweb(d.getLienweb());
-                    // Sous produit
-                    Sousproduit st = sousproduitRepository.findByIdspr(d.getIdspr());
-                    be.setAppartenance(st.getLibelle());
+                    // DETAIL :
+                    Detail dl = detailRepository.findByIddet(d.getIddet());
+                    be.setAppartenance(dl.getLibelle());
                     //
                     be.setQuantite(d.getQuantite());
                     be.setChoix(d.getChoix());
