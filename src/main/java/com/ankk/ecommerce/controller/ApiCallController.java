@@ -54,6 +54,8 @@ public class ApiCallController {
     @Autowired
     ProduitRepository produitRepository;
     @Autowired
+    AchatRepository achatRepository;
+    @Autowired
     DetailRepository detailRepository;
     @Autowired
     JwtUtil jwtUtil;
@@ -299,6 +301,32 @@ public class ApiCallController {
         );
         return ret;
     }
+
+    // Get ARTICLES based on iddet :
+    @CrossOrigin("*")
+    @PostMapping(value={"/getarticlesbasedoniddet"})
+    private List<Beanarticledetail> getarticlesbasedoniddet(@RequestBody RequeteBean rn){
+        List<Article> lte = articleRepository.findAllByIddetAndChoix(rn.getIdprd(), 1);
+        List<Beanarticledetail> ret = new ArrayList<>();
+        lte.forEach(
+                d -> {
+                    // For each ARTICLE, pick the number of those bought :
+                    List<Achat> articleAchete = achatRepository.findAllByIdartAndActif(d.getIdart(), 0);
+                    Beanarticledetail be = new Beanarticledetail();
+                    be.setLienweb(d.getLienweb());
+                    be.setLibelle(d.getLibelle());
+                    be.setPrix(d.getPrix());
+                    be.setReduction(0);
+                    be.setNote(0);
+                    be.setArticlerestant( d.getQuantite() - (articleAchete != null ? articleAchete.size() : 0) );
+                    // Add
+                    ret.add(be);
+                }
+        );
+        return ret;
+    }
+
+
 
     @CrossOrigin("*")
     @GetMapping(value="/enregistrerPartenaire")

@@ -10,5 +10,6 @@ public interface ArticleRepository extends CrudRepository<Article, Integer> {
     List<Article> findAllByIdent(int ident);
     List<Article> findAllByIdentAndIddet(int ident, int iddet);
     List<Article> findAllByIddet(int iddet);
+    List<Article> findAllByIddetAndChoix(int iddet, int choix);
 
 }
