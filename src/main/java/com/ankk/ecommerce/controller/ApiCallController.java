@@ -313,6 +313,7 @@ public class ApiCallController {
                     // For each ARTICLE, pick the number of those bought :
                     List<Achat> articleAchete = achatRepository.findAllByIdartAndActif(d.getIdart(), 0);
                     Beanarticledetail be = new Beanarticledetail();
+                    be.setIdart(d.getIdart());
                     be.setLienweb(d.getLienweb());
                     be.setLibelle(d.getLibelle());
                     be.setPrix(d.getPrix());
