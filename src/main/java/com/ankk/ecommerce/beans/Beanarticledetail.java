@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class Beanarticledetail {
-    Integer idart, prix, reduction, note, articlerestant;
+    Integer idart, prix, reduction, note, articlerestant, iddet;
     String libelle, lienweb;
 }
