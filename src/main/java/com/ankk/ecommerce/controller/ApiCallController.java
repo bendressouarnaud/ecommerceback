@@ -52,6 +52,8 @@ public class ApiCallController {
     @Autowired
     ArticleRepository articleRepository;
     @Autowired
+    CommuneRepository communeRepository;
+    @Autowired
     ProduitRepository produitRepository;
     @Autowired
     AchatRepository achatRepository;
@@ -206,6 +208,12 @@ public class ApiCallController {
         return lte;*/
     }
 
+    @CrossOrigin("*")
+    @GetMapping(value={"/getAllCommunes","/getmobileAllCommunes"})
+    private List<Commune> getAllCommunes(){
+        System.out.println("Entrée");
+        return communeRepository.findAllByOrderByLibelleAsc();
+    }
 
     @CrossOrigin("*")
     @GetMapping(value={"/getsousproduitdata"})

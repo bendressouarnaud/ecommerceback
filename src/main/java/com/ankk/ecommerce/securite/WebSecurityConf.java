@@ -50,7 +50,8 @@ public class WebSecurityConf extends WebSecurityConfigurerAdapter {
                 .authorizeRequests().antMatchers(
                         "/authentification","/getmotifs",
                         "/authmobileusermac/**",
-                        "/getmobileAllProduits","/getmobileallsousproduits","/getarticlesbasedoniddet"
+                        "/getmobileAllProduits","/getmobileallsousproduits","/getarticlesbasedoniddet",
+                "/getmobileAllCommunes"
                 ).permitAll().anyRequest().authenticated()
                 .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
