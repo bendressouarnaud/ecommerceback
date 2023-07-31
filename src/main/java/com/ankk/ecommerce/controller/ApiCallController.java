@@ -56,6 +56,8 @@ public class ApiCallController {
     @Autowired
     ProduitRepository produitRepository;
     @Autowired
+    ClientRepository clientRepository;
+    @Autowired
     AchatRepository achatRepository;
     @Autowired
     DetailRepository detailRepository;
@@ -334,6 +336,26 @@ public class ApiCallController {
                 }
         );
         return ret;
+    }
+
+
+    // Get ARTICLES based on iddet :
+    @CrossOrigin("*")
+    @PostMapping(value={"/managecustomer"})
+    private Client managecustomer(@RequestBody Client ct){
+        Client clt = clientRepository.findByEmail(ct.getEmail());
+        if(clt == null) clt = new Client();
+        clt.setNom(ct.getNom());
+        clt.setPrenom(ct.getPrenom());
+        clt.setEmail(ct.getEmail());
+        clt.setNumero(ct.getNumero());
+        clt.setCommune(ct.getCommune());
+        clt.setAdresse(ct.getAdresse());
+        clt.setGenre(ct.getGenre());
+        clt.setFcmtoken(ct.getFcmtoken());
+
+        //
+        return clientRepository.save(clt);
     }
 
 
