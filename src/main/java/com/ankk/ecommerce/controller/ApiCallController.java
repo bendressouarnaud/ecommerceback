@@ -353,6 +353,8 @@ public class ApiCallController {
         clt.setAdresse(ct.getAdresse());
         clt.setGenre(ct.getGenre());
         clt.setFcmtoken(ct.getFcmtoken());
+        String heure = new SimpleDateFormat("HH:mm").format(new Date());
+        clt.setPwd(heure.replace(":", ""));
 
         //
         return clientRepository.save(clt);
