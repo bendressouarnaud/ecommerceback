@@ -9,6 +9,9 @@ import com.ankk.ecommerce.service.FileService;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -29,7 +32,9 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
 @RestController
+@Tag(name="ApiGen")
 public class ApiCallController {
 
     // Attribute :
@@ -165,9 +170,9 @@ public class ApiCallController {
     }
 
     @CrossOrigin("*")
+    @Operation(summary = "Obtenir la liste des profils")
     @GetMapping(value="/getprofiliste")
     private List<Profil> getprofiliste(HttpServletRequest request){
-
         List<Object[]> liste = getUserId(request);
         Utilisateur ur = null;
         if(liste.size() > 0) {
