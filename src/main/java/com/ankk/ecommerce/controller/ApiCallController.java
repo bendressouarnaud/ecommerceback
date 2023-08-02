@@ -44,6 +44,8 @@ public class ApiCallController {
     @Autowired
     UtilisateurRepository utilisateurRepository;
     @Autowired
+    CommandeRepository commandeRepository;
+    @Autowired
     AuthenticationManager authenticationManager;
     @Autowired
     UserDetailsServiceImp userDetailsServiceImp;
@@ -213,7 +215,6 @@ public class ApiCallController {
     @CrossOrigin("*")
     @GetMapping(value={"/getAllCommunes","/getmobileAllCommunes"})
     private List<Commune> getAllCommunes(){
-        System.out.println("Entrée");
         return communeRepository.findAllByOrderByLibelleAsc();
     }
 
@@ -360,7 +361,40 @@ public class ApiCallController {
         return clientRepository.save(clt);
     }
 
+    @CrossOrigin("*")
+    @PostMapping(value={"/sendbooking"})
+    private RequeteBean sendbooking(@RequestBody Beanarticlerequest data){
 
+        //
+        data.getListe().forEach(
+            d -> {
+                Commande ce = new Commande();
+                ce.setIdart(d.getIdart());
+                // Get Article PRICE
+                ce.setPrix(articleRepository.findByIdart(d.getIdart()).getPrix());
+                ce.setEtat(1);
+                String dte = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+                try {
+                    Date dateToday = new SimpleDateFormat("yyyy-MM-dd").
+                            parse(dte);
+                    ce.setDates(dateToday);
+                }
+                catch (Exception exc){
+                    ce.setDates(null);
+                }
+                String heure = new SimpleDateFormat("HH:mm:ss").format(new Date());
+                ce.setHeure(heure);
+                ce.setIduser(data.getIdcli());
+                commandeRepository.save(ce);
+            }
+        );
+
+        RequeteBean rn = new RequeteBean();
+        rn.setIdprd(1);
+
+        //
+        return rn;
+    }
 
     @CrossOrigin("*")
     @GetMapping(value="/enregistrerPartenaire")
