@@ -36,4 +36,7 @@ public class Client {
 
     @Column(name = "fcmtoken")
     private String fcmtoken;
+
+    @Column(name = "pwd")
+    private String pwd;
 }
