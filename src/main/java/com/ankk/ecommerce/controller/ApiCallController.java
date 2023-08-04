@@ -368,9 +368,12 @@ public class ApiCallController {
 
     @CrossOrigin("*")
     @PostMapping(value={"/sendbooking"})
-    private RequeteBean sendbooking(@RequestBody Beanarticlerequest data){
+    private ResponseBooking sendbooking(@RequestBody Beanarticlerequest data){
 
         //
+        ResponseBooking rn = new ResponseBooking();
+        String dte = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        String heure = new SimpleDateFormat("HH:mm:ss").format(new Date());
         data.getListe().forEach(
             d -> {
                 Commande ce = new Commande();
@@ -378,7 +381,6 @@ public class ApiCallController {
                 // Get Article PRICE
                 ce.setPrix(articleRepository.findByIdart(d.getIdart()).getPrix());
                 ce.setEtat(1);
-                String dte = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
                 try {
                     Date dateToday = new SimpleDateFormat("yyyy-MM-dd").
                             parse(dte);
@@ -387,15 +389,16 @@ public class ApiCallController {
                 catch (Exception exc){
                     ce.setDates(null);
                 }
-                String heure = new SimpleDateFormat("HH:mm:ss").format(new Date());
                 ce.setHeure(heure);
                 ce.setIduser(data.getIdcli());
+                ce.setTraite(0);
                 commandeRepository.save(ce);
             }
         );
 
-        RequeteBean rn = new RequeteBean();
-        rn.setIdprd(1);
+        rn.setEtat(1);
+        rn.setDates(dte);
+        rn.setHeure(heure);
 
         //
         return rn;

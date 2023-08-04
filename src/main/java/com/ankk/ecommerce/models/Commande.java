@@ -31,4 +31,7 @@ public class Commande {
 
     @Column(name = "etat")
     private Integer etat;
+
+    @Column(name = "traite")
+    private Integer traite;
 }
