@@ -51,7 +51,8 @@ public class WebSecurityConf extends WebSecurityConfigurerAdapter {
                         "/authentification","/getmotifs",
                         "/authmobileusermac/**",
                         "/getmobileAllProduits","/getmobileallsousproduits","/getarticlesbasedoniddet",
-                "/getmobileAllCommunes", "/managecustomer","/sendbooking"
+                "/getmobileAllCommunes", "/managecustomer","/sendbooking",
+                "/getmobileallsousproduitsbyidprd","/getmobileallsousproduitsarticles"
                 ).permitAll().anyRequest().authenticated()
                 .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);

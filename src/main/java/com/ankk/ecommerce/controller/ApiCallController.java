@@ -318,6 +318,86 @@ public class ApiCallController {
         return ret;
     }
 
+
+    @CrossOrigin("*")
+    @PostMapping(value={"/getmobileallsousproduitsarticles"})
+    private List<Beansousproduitarticle> getmobileallsousproduitsarticles(@RequestBody RequeteBean rn){
+
+        // ret :
+        List<Beansousproduitarticle> ret = new ArrayList<>();
+
+        List<Sousproduit> lte = sousproduitRepository.findAllByIdprd(rn.getIdprd());
+        if(!lte.isEmpty()){
+            List<Detail> lteDetail = detailRepository.findAllByIdsprIn(
+                lte.stream().map(Sousproduit::getIdspr).collect(Collectors.toList())
+            );
+            if(!lteDetail.isEmpty()){
+                List<Article> lteArticle = articleRepository.findAllByIddetIn(
+                    lteDetail.stream().map(Detail::getIddet).collect(Collectors.toList())
+                );
+
+                if(!lteArticle.isEmpty()){
+                    // Group by 'SOUS-PRODUIT'
+                    lte.forEach(
+                        s -> {
+                            // DETAIL :
+                            List<Detail> ltDt = lteDetail.stream().
+                                    filter( a -> s.getIdspr() == a.getIdspr()).
+                                    collect(Collectors.toList());
+
+                            ltDt.forEach(
+                                    d -> {
+                                        // Get related ARTICLE :
+                                        List<Article> ltArticle = lteArticle.stream().
+                                                filter( a -> d.getIddet() == a.getIddet()).
+                                                collect(Collectors.toList());
+                                        if(!ltArticle.isEmpty()){
+                                            //
+                                            Beansousproduitarticle be = new Beansousproduitarticle();
+                                            be.setDetail(s.getLibelle());
+                                            ltArticle.forEach(
+                                                    l -> {
+                                                        Beanresumearticle br = new Beanresumearticle();
+                                                        br.setIdart(l.getIdart());
+                                                        br.setLienweb(l.getLienweb());
+                                                        br.setLibelle(l.getLibelle());
+                                                        br.setPrix(l.getPrix());
+                                                        be.getListe().add(br);
+                                                    }
+                                            );
+                                            ret.add(be);
+                                        }
+                                    }
+                            );
+                        }
+                    );
+                }
+            }
+        }
+
+        return ret;
+    }
+
+
+    @CrossOrigin("*")
+    @PostMapping(value={"/getmobileallsousproduitsbyidprd"})
+    private List<Beansousproduit> getmobileallsousproduitsbyidprd(@RequestBody RequeteBean rn){
+        List<Sousproduit> lte = sousproduitRepository.findAllByIdprd(rn.getIdprd());
+        List<Beansousproduit> ret = new ArrayList<>();
+        lte.forEach(
+            d -> {
+                Beansousproduit bt = new Beansousproduit();
+                bt.setIdspr(d.getIdspr());
+                bt.setLibelle(d.getLibelle());
+                bt.setLienweb(d.getLienweb());
+                bt.setProduit("");
+                ret.add(bt);
+            }
+        );
+        return ret;
+    }
+
+
     // Get ARTICLES based on iddet :
     @CrossOrigin("*")
     @PostMapping(value={"/getarticlesbasedoniddet"})

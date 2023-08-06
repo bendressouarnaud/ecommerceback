@@ -9,5 +9,6 @@ import java.util.List;
 public interface DetailRepository extends CrudRepository<Detail, Integer> {
     List<Detail> findAll();
     List<Detail> findAllByIdspr(int id);
+    List<Detail> findAllByIdsprIn(List<Integer> listIdsp);
     Detail findByIddet(int id);
 }
