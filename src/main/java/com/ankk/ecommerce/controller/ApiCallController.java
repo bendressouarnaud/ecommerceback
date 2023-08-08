@@ -380,6 +380,52 @@ public class ApiCallController {
 
 
     @CrossOrigin("*")
+    @PostMapping(value={"/getmobilealldetailsarticles"})
+    private List<Beansousproduitarticle> getmobilealldetailsarticles(@RequestBody RequeteBean rn){
+
+        // ret :
+        List<Beansousproduitarticle> ret = new ArrayList<>();
+
+        List<Detail> lteDt = detailRepository.findAllByIdspr(rn.getIdprd());
+        if(!lteDt.isEmpty()){
+            List<Article> lteArticle = articleRepository.findAllByIddetIn(
+                    lteDt.stream().map(Detail::getIddet).collect(Collectors.toList())
+            );
+
+            if(!lteArticle.isEmpty()){
+                // Group by 'DETAIL'
+                lteDt.forEach(
+                        s -> {
+                            // Get related ARTICLE :
+                            List<Article> ltArticle = lteArticle.stream().
+                                    filter( a -> s.getIddet() == a.getIddet()).
+                                    collect(Collectors.toList());
+                            if(!ltArticle.isEmpty()){
+                                //
+                                Beansousproduitarticle be = new Beansousproduitarticle();
+                                be.setDetail(s.getLibelle());
+                                ltArticle.forEach(
+                                        l -> {
+                                            Beanresumearticle br = new Beanresumearticle();
+                                            br.setIdart(l.getIdart());
+                                            br.setLienweb(l.getLienweb());
+                                            br.setLibelle(l.getLibelle());
+                                            br.setPrix(l.getPrix());
+                                            be.getListe().add(br);
+                                        }
+                                );
+                                ret.add(be);
+                            }
+                        }
+                );
+            }
+        }
+
+        return ret;
+    }
+
+
+    @CrossOrigin("*")
     @PostMapping(value={"/getmobileallsousproduitsbyidprd"})
     private List<Beansousproduit> getmobileallsousproduitsbyidprd(@RequestBody RequeteBean rn){
         List<Sousproduit> lte = sousproduitRepository.findAllByIdprd(rn.getIdprd());
