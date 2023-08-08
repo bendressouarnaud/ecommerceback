@@ -398,6 +398,13 @@ public class ApiCallController {
     }
 
 
+    @CrossOrigin("*")
+    @PostMapping(value={"/getmobilealldetailsbyidspr"})
+    private List<Detail> getmobilealldetailsbyidspr(@RequestBody RequeteBean rn){
+        return detailRepository.findAllByIdspr(rn.getIdprd());
+    }
+
+
     // Get ARTICLES based on iddet :
     @CrossOrigin("*")
     @PostMapping(value={"/getarticlesbasedoniddet"})
