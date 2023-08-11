@@ -69,6 +69,10 @@ public class ApiCallController {
     @Autowired
     DetailRepository detailRepository;
     @Autowired
+    CommentaireRepository commentaireRepository;
+    @Autowired
+    ImagesupplementRepository imagesupplementRepository;
+    @Autowired
     JwtUtil jwtUtil;
     @Value("${app.firebase-config}")
     private String firebaseConfig;
@@ -953,6 +957,39 @@ public class ApiCallController {
 
         return ret;
     }
+
+
+    // Get ARTICLES based on iddet :
+    @CrossOrigin("*")
+    @PostMapping(value={"/getmobilearticleinformationbyidart"})
+    private Beanarticledatahistory getmobilearticleinformationbyidart(@RequestBody RequeteBean rn){
+        // Get images :
+        List<Imagesupplement> imagesSup = imagesupplementRepository.findAllByIdart(rn.getIdprd());
+        // Get Comments :
+        List<Commentaire> comments = commentaireRepository.findAllByIdart(rn.getIdprd());
+
+        // Get Aricle :
+        Article ale = articleRepository.findByIdart(rn.getIdprd());
+        Beanarticledatahistory by = new Beanarticledatahistory();
+        by.setArticle(ale.getLibelle());
+        Partenaire pe = partenaireRepository.findByIdent(ale.getIdent());
+        by.setEntreprise(pe.getLibelle());
+        by.setModaliteretour("Waiting");
+        by.setDescriptionproduit(ale.getDetail());
+        by.setPrix(ale.getPrix());
+        by.setReduction(0);
+        by.setNombrearticle(10);
+        //by.setNombrearticle(ale.getQuantite());
+        // Add origin image
+        if(imagesSup == null) imagesSup = new ArrayList<>();
+        imagesSup.add(new Imagesupplement(0L, ale.getLienweb(), ale.getIdart()));
+        //
+        by.setImages(imagesSup);
+        by.setComments(comments);
+        return by;
+    }
+
+
 
     @PostMapping("/profile/pic/{fileName}")
     public Object download(@PathVariable String fileName) throws IOException {
