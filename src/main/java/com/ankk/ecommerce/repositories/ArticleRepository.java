@@ -10,9 +10,11 @@ import java.util.List;
 public interface ArticleRepository extends CrudRepository<Article, Integer> {
 
     List<Article> findAllByIdent(int ident);
+    List<Article> findAllByOrderByLibelleAsc();
     List<Article> findAllByIdentAndIddet(int ident, int iddet);
     List<Article> findAllByIddet(int iddet);
     List<Article> findAllByIddetIn(List<Integer> liste);
+    List<Article> findAllByChoixAndIddetIn(int choix, List<Integer> liste);
     List<Article> findAllByIddetAndChoix(int iddet, int choix);
     Article findByIdart(int id);
 

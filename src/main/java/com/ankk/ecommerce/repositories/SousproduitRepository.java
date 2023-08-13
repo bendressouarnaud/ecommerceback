@@ -9,4 +9,5 @@ public interface SousproduitRepository extends CrudRepository<Sousproduit, Integ
     List<Sousproduit> findAll();
     List<Sousproduit> findAllByIdprd(int id);
     Sousproduit findByIdspr(int id);
+    Sousproduit findByLibelle(String lib);
 }

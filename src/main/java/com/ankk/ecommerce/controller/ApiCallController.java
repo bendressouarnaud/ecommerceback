@@ -47,6 +47,8 @@ public class ApiCallController {
     @Autowired
     FileService fileService;
     @Autowired
+    PromotionRepository promotionRepository;
+    @Autowired
     UtilisateurRepository utilisateurRepository;
     @Autowired
     CommandeRepository commandeRepository;
@@ -70,6 +72,8 @@ public class ApiCallController {
     DetailRepository detailRepository;
     @Autowired
     CommentaireRepository commentaireRepository;
+    @Autowired
+    DetailmodaliteretourRepository detailmodaliteretourRepository;
     @Autowired
     ImagesupplementRepository imagesupplementRepository;
     @Autowired
@@ -482,6 +486,39 @@ public class ApiCallController {
     }
 
 
+    @CrossOrigin("*")
+    @PostMapping(value={"/getmobilearticlesBasedonLib"})
+    private List<Beanarticledetail> getmobilearticlesBasedonLib(@RequestBody RequestBean rn){
+
+        // Sous-Produit lib
+        Sousproduit st = sousproduitRepository.findByLibelle(rn.getLib());
+        // Now get DETAIL
+        List<Detail> lesDet = detailRepository.findAllByIdspr(st.getIdspr());
+        // Then, ARTICLE :
+        List<Article> lesArt = articleRepository.findAllByChoixAndIddetIn(1,
+                lesDet.stream().map(Detail::getIddet).collect(Collectors.toList()));
+        List<Beanarticledetail> ret = new ArrayList<>();
+        lesArt.forEach(
+                d -> {
+                    // For each ARTICLE, pick the number of those bought :
+                    List<Achat> articleAchete = achatRepository.findAllByIdartAndActif(d.getIdart(), 0);
+                    Beanarticledetail be = new Beanarticledetail();
+                    be.setIddet(d.getIddet());
+                    be.setIdart(d.getIdart());
+                    be.setLienweb(d.getLienweb());
+                    be.setLibelle(d.getLibelle());
+                    be.setPrix(d.getPrix());
+                    be.setReduction(0);
+                    be.setNote(0);
+                    be.setArticlerestant( d.getQuantite() - (articleAchete != null ? articleAchete.size() : 0) );
+                    // Add
+                    ret.add(be);
+                }
+        );
+        return ret;
+    }
+
+
     // Get ARTICLES based on iddet :
     @CrossOrigin("*")
     @PostMapping(value={"/managecustomer"})
@@ -762,6 +799,119 @@ public class ApiCallController {
     }
 
 
+    @CrossOrigin("*")
+    @PostMapping("/savemodalites")
+    public Reponse savemodalites(@RequestParam(name="id") Integer iddtr,
+                                @RequestParam(name="iddet") Integer iddet,
+                                @RequestParam(name="modalite") String modalite,
+                                HttpServletRequest request
+    ) {
+
+        String identifiant = getBackUserConnectedName(request);
+
+        //
+        EntityManager emr = emf.createEntityManager();
+        emr.getTransaction().begin();
+
+        // Demande de Rapports :
+        StoredProcedureQuery procedureQuery = emr
+                .createStoredProcedureQuery("findUserByIdentifier");
+        procedureQuery.registerStoredProcedureParameter("id",
+                String.class, ParameterMode.IN);
+        procedureQuery.setParameter("id", identifiant);
+        procedureQuery.registerStoredProcedureParameter("keyword",
+                String.class, ParameterMode.IN);
+        procedureQuery.setParameter("keyword", "K8_jemange");
+        List<Object[]> resultat = procedureQuery.getResultList();
+
+        // Close :
+        emr.getTransaction().commit();
+        emr.close();
+
+        Utilisateur ur = null;
+        if(resultat.size() > 0) {
+            ur = utilisateurRepository.findByIdentifiant(String.valueOf(resultat.get(0)[1]));
+        }
+
+        Detailmodaliteretour dr = new Detailmodaliteretour();
+        dr.setIdent(ur.getIdent());
+        dr.setIddet(iddet);
+        dr.setCommentaire(modalite);
+        detailmodaliteretourRepository.save(dr);
+
+        Reponse re = new Reponse();
+        re.setElement("OK");
+        re.setIdentifiant("OK");
+        re.setProfil("OK");
+        return  re;
+    }
+
+
+    @CrossOrigin("*")
+    @PostMapping("/savepromotion")
+    public Reponse savepromotion(@RequestParam(name="id") long idprn,
+                                 @RequestParam(name="datedebut") String datedebut,
+                                 @RequestParam(name="datefin") String datefin,
+                                 @RequestParam(name="libellepromotion") String libellepromotion,
+                                 @RequestParam(name="reduction") Integer reduction,
+                                 HttpServletRequest request
+    ) {
+
+        String identifiant = getBackUserConnectedName(request);
+
+        //
+        EntityManager emr = emf.createEntityManager();
+        emr.getTransaction().begin();
+
+        // Demande de Rapports :
+        StoredProcedureQuery procedureQuery = emr
+                .createStoredProcedureQuery("findUserByIdentifier");
+        procedureQuery.registerStoredProcedureParameter("id",
+                String.class, ParameterMode.IN);
+        procedureQuery.setParameter("id", identifiant);
+        procedureQuery.registerStoredProcedureParameter("keyword",
+                String.class, ParameterMode.IN);
+        procedureQuery.setParameter("keyword", "K8_jemange");
+        List<Object[]> resultat = procedureQuery.getResultList();
+
+        // Close :
+        emr.getTransaction().commit();
+        emr.close();
+
+        Utilisateur ur = null;
+        if(resultat.size() > 0) {
+            ur = utilisateurRepository.findByIdentifiant(String.valueOf(resultat.get(0)[1]));
+        }
+
+        //
+        Promotion pn = promotionRepository.findByIdprn(idprn);
+        if(pn == null) pn = new Promotion();
+        pn.setLibelle(libellepromotion);
+        pn.setIdent(ur.getIdent());
+        pn.setReduction(reduction);
+        //
+        try {
+            Date dateDeb = new SimpleDateFormat("yyyy-MM-dd").
+                    parse(datedebut);
+            pn.setDatedebut(dateDeb);
+            Date dateFin = new SimpleDateFormat("yyyy-MM-dd").
+                    parse(datefin);
+            pn.setDatefin(dateFin);
+        }
+        catch (Exception exc){
+            pn.setDatedebut(null);
+            pn.setDatefin(null);
+        }
+        // Save :
+        promotionRepository.save(pn);
+
+        Reponse re = new Reponse();
+        re.setElement("OK");
+        re.setIdentifiant("OK");
+        re.setProfil("OK");
+        return  re;
+    }
+
 
     @CrossOrigin("*")
     @GetMapping(value="/parametresconnexion")
@@ -1037,5 +1187,225 @@ public class ApiCallController {
 
         }
         return username;
+    }
+
+
+    /*
+    @CrossOrigin("*")
+    @GetMapping(value="/getcompanyarticles")
+    private List<Beanarticle> getcompanyarticles(
+            HttpServletRequest request
+    ) {
+        //
+        String identifiant = getBackUserConnectedName(request);
+        //
+        EntityManager emr = emf.createEntityManager();
+        emr.getTransaction().begin();
+
+        // Demande de Rapports :
+        StoredProcedureQuery procedureQuery = emr
+                .createStoredProcedureQuery("findUserByIdentifier");
+        procedureQuery.registerStoredProcedureParameter("id",
+                String.class, ParameterMode.IN);
+        procedureQuery.setParameter("id", identifiant);
+        procedureQuery.registerStoredProcedureParameter("keyword",
+                String.class, ParameterMode.IN);
+        procedureQuery.setParameter("keyword", "K8_jemange");
+        List<Object[]> resultat = procedureQuery.getResultList();
+
+        // Close :
+        emr.getTransaction().commit();
+        emr.close();
+
+        Utilisateur ur = null;
+        if(resultat.size() > 0) {
+            ur = utilisateurRepository.findByIdentifiant(String.valueOf(resultat.get(0)[1]));
+        }
+
+        // Now pick articles :
+        List<Beanarticle> ret = new ArrayList<>();
+        List<Article> listArticle = articleRepository.findAllByIdent(ur.getIdent());
+        listArticle.forEach(
+                d -> {
+                    Beanarticle be = new Beanarticle();
+                    be.setIdart(d.getIdart());
+                    be.setLibelle(d.getLibelle());
+                    be.setPrix(d.getPrix());
+                    be.setLienweb(d.getLienweb());
+                    // DETAIL :
+                    Detail dl = detailRepository.findByIddet(d.getIddet());
+                    be.setAppartenance(dl.getLibelle());
+                    //
+                    be.setQuantite(d.getQuantite());
+                    be.setChoix(d.getChoix());
+                    ret.add(be);
+                }
+        );
+
+        return ret;
+    }*/
+
+
+    /*  */
+    @CrossOrigin("*")
+    @GetMapping(value="/getwebdetailbycompany")
+    private List<Detail> getwebdetailbycompany(
+            HttpServletRequest request
+    ) {
+        //
+        String identifiant = getBackUserConnectedName(request);
+        //
+        EntityManager emr = emf.createEntityManager();
+        emr.getTransaction().begin();
+
+        // Demande de Rapports :
+        StoredProcedureQuery procedureQuery = emr
+                .createStoredProcedureQuery("findUserByIdentifier");
+        procedureQuery.registerStoredProcedureParameter("id",
+                String.class, ParameterMode.IN);
+        procedureQuery.setParameter("id", identifiant);
+        procedureQuery.registerStoredProcedureParameter("keyword",
+                String.class, ParameterMode.IN);
+        procedureQuery.setParameter("keyword", "K8_jemange");
+        List<Object[]> resultat = procedureQuery.getResultList();
+
+        // Close :
+        emr.getTransaction().commit();
+        emr.close();
+
+        Utilisateur ur = null;
+        if(resultat.size() > 0) {
+            ur = utilisateurRepository.findByIdentifiant(String.valueOf(resultat.get(0)[1]));
+        }
+
+        // Define Return LIST :
+        List<Detail> lesDet = new ArrayList<>();
+
+                // Get all ARTICLEs related to 'ENTREPRISE' :
+        List<Article> lesArticles = articleRepository.findAllByIdent(ur.getIdent());
+        if(lesArticles != null){
+            List<Integer> lesDetailsId =
+                    lesArticles.stream().mapToInt(Article::getIddet).boxed().collect(Collectors.toList());
+            // Now get Details
+            lesDet = detailRepository.findAllByIddetIn(lesDetailsId);
+        }
+
+        return lesDet;
+    }
+
+
+    /*  */
+    @CrossOrigin("*")
+    @GetMapping(value="/getwebdetailmodalitebycompany")
+    private List<BeanDetailModalite> getwebdetailmodalitebycompany(
+            HttpServletRequest request
+    ) {
+        //
+        String identifiant = getBackUserConnectedName(request);
+        //
+        EntityManager emr = emf.createEntityManager();
+        emr.getTransaction().begin();
+
+        // Demande de Rapports :
+        StoredProcedureQuery procedureQuery = emr
+                .createStoredProcedureQuery("findUserByIdentifier");
+        procedureQuery.registerStoredProcedureParameter("id",
+                String.class, ParameterMode.IN);
+        procedureQuery.setParameter("id", identifiant);
+        procedureQuery.registerStoredProcedureParameter("keyword",
+                String.class, ParameterMode.IN);
+        procedureQuery.setParameter("keyword", "K8_jemange");
+        List<Object[]> resultat = procedureQuery.getResultList();
+
+        // Close :
+        emr.getTransaction().commit();
+        emr.close();
+
+        Utilisateur ur = null;
+        if(resultat.size() > 0) {
+            ur = utilisateurRepository.findByIdentifiant(String.valueOf(resultat.get(0)[1]));
+        }
+
+        // Define Return LIST :
+        List<BeanDetailModalite> lesDet = new ArrayList<>();
+
+        // Get all ARTICLEs related to 'ENTREPRISE' :
+        List<Detailmodaliteretour> lesCmt =
+                detailmodaliteretourRepository.findAllByIdent(ur.getIdent());
+        if(lesCmt != null){
+            lesCmt.forEach(
+                d -> {
+                    BeanDetailModalite be = new BeanDetailModalite();
+                    be.setDetail(detailRepository.findByIddet(d.getIddet()).getLibelle());
+                    be.setModalite(d.getCommentaire());
+                    be.setIddtr(d.getIddtr());
+                    lesDet.add(be);
+                }
+            );
+            //
+        }
+
+        return lesDet;
+    }
+
+
+
+    @CrossOrigin("*")
+    @GetMapping(value="/getwebcompanypromotion")
+    private List<Beanpromotion> getwebcompanypromotion(
+            HttpServletRequest request
+    ) {
+        //
+        String identifiant = getBackUserConnectedName(request);
+        //
+        EntityManager emr = emf.createEntityManager();
+        emr.getTransaction().begin();
+
+        // Demande de Rapports :
+        StoredProcedureQuery procedureQuery = emr
+                .createStoredProcedureQuery("findUserByIdentifier");
+        procedureQuery.registerStoredProcedureParameter("id",
+                String.class, ParameterMode.IN);
+        procedureQuery.setParameter("id", identifiant);
+        procedureQuery.registerStoredProcedureParameter("keyword",
+                String.class, ParameterMode.IN);
+        procedureQuery.setParameter("keyword", "K8_jemange");
+        List<Object[]> resultat = procedureQuery.getResultList();
+
+        // Close :
+        emr.getTransaction().commit();
+        emr.close();
+
+        Utilisateur ur = null;
+        if(resultat.size() > 0) {
+            ur = utilisateurRepository.findByIdentifiant(String.valueOf(resultat.get(0)[1]));
+        }
+
+        //  Return LIST :
+        List<Beanpromotion> lesData = new ArrayList<>();
+
+        // Get all PROMOTION related to 'ENTREPRISE' :
+        List<Promotion> lesPrm =
+                promotionRepository.findAllByIdent(ur.getIdent());
+        if(lesPrm != null){
+            lesPrm.forEach(
+                d -> {
+                    Beanpromotion bn = new Beanpromotion();
+                    bn.setIdprn(d.getIdprn());
+                    bn.setReduction(d.getReduction());
+                    bn.setLibelle(d.getLibelle());
+                    // Debut
+                    String dte =
+                        new SimpleDateFormat("yyyy-MM-dd").format(d.getDatedebut());
+                    bn.setDatedebut(dte);
+                    dte = new SimpleDateFormat("yyyy-MM-dd").format(d.getDatefin());
+                    bn.setDatefin(dte);
+                    lesData.add(bn);
+                }
+            );
+            //
+        }
+
+        return lesData;
     }
 }
