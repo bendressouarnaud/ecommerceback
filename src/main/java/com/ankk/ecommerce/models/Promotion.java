@@ -30,4 +30,7 @@ public class Promotion {
     @Column(name = "datefin")
     private Date datefin;
 
+    @Column(name = "etat")
+    private int etat;
+
 }

@@ -41,6 +41,8 @@ public class ApiCallController {
     @PersistenceUnit
     EntityManagerFactory emf;
     @Autowired
+    LienpromotionRepository lienpromotionRepository;
+    @Autowired
     ProfilRepository profilRepository;
     @Autowired
     PartenaireRepository partenaireRepository;
@@ -373,7 +375,25 @@ public class ApiCallController {
                                                         be.getListe().add(br);
                                                     }
                                             );
-                                            ret.add(be);
+
+                                            // Check :
+                                            /*Optional<Beansousproduitarticle> bet =
+                                                    ret.stream().filter(
+                                                                    r -> r.getDetail().equals(s.getLibelle())).
+                                                            findFirst();
+                                            Beansousproduitarticle tp = bet.orElse(null);*/
+                                           Beansousproduitarticle bet =
+                                                    ret.stream().filter(
+                                                                    r -> r.getDetail().equals(s.getLibelle())).
+                                                            findAny().orElse(null);
+                                            if(bet!=null){
+                                                ret.remove(bet);
+                                                bet.getListe().addAll(be.getListe());
+                                                ret.add(bet);
+                                            }
+                                            else{
+                                                ret.add(be);
+                                            }
                                         }
                                     }
                             );
@@ -791,6 +811,54 @@ public class ApiCallController {
         ae.setPrix(prix);
 
         fileService.upload(multipartFile, libelle, 2, 0, ae, null);
+        Reponse re = new Reponse();
+        re.setElement("OK");
+        re.setIdentifiant("OK");
+        re.setProfil("OK");
+        return  re;
+    }
+
+
+    @CrossOrigin("*")
+    @PostMapping("/savearticleandpromotion")
+    public Reponse savearticleandpromotion(@RequestParam(name="id") Integer idart,
+                                @RequestParam(name="actif") Integer actif,
+                                @RequestParam(name="idprn") Integer idprn,
+                                HttpServletRequest request
+    ) {
+
+        String identifiant = getBackUserConnectedName(request);
+
+        //
+        EntityManager emr = emf.createEntityManager();
+        emr.getTransaction().begin();
+
+        // Demande de Rapports :
+        StoredProcedureQuery procedureQuery = emr
+                .createStoredProcedureQuery("findUserByIdentifier");
+        procedureQuery.registerStoredProcedureParameter("id",
+                String.class, ParameterMode.IN);
+        procedureQuery.setParameter("id", identifiant);
+        procedureQuery.registerStoredProcedureParameter("keyword",
+                String.class, ParameterMode.IN);
+        procedureQuery.setParameter("keyword", "K8_jemange");
+        List<Object[]> resultat = procedureQuery.getResultList();
+
+        // Close :
+        emr.getTransaction().commit();
+        emr.close();
+
+        Utilisateur ur = null;
+        if(resultat.size() > 0) {
+            ur = utilisateurRepository.findByIdentifiant(String.valueOf(resultat.get(0)[1]));
+        }
+
+        Lienpromotion ln = lienpromotionRepository.findByIdartAndIdpro(idart, idprn);
+        if(ln == null) ln = new Lienpromotion();
+        ln.setIdart(idart);
+        ln.setIdpro(idprn);
+        lienpromotionRepository.save(ln);
+
         Reponse re = new Reponse();
         re.setElement("OK");
         re.setIdentifiant("OK");
@@ -1407,5 +1475,35 @@ public class ApiCallController {
         }
 
         return lesData;
+    }
+
+
+    @CrossOrigin("*")
+    @PostMapping("/getarticlepromotion")
+    public List<Beanpromotion> getarticlepromotion(@RequestParam(name="id") int idart,
+                                 HttpServletRequest request
+    ) {
+        List<Lienpromotion> liste = lienpromotionRepository.findAllByIdart(idart);
+        List<Promotion> lteProm =
+            promotionRepository.findAllByIdprnIn(
+                    liste.stream().mapToLong(Lienpromotion::getIdpro).boxed().collect(Collectors.toList()));
+        List<Beanpromotion> ret = new ArrayList<>();
+        lteProm.forEach(
+            d -> {
+                Beanpromotion bn = new Beanpromotion();
+                bn.setIdprn(d.getIdprn());
+                bn.setReduction(d.getReduction());
+                bn.setLibelle(d.getLibelle());
+                // Debut
+                String dte =
+                        new SimpleDateFormat("dd-MM-yyyy").format(d.getDatedebut());
+                bn.setDatedebut(dte);
+                dte = new SimpleDateFormat("dd-MM-yyyy").format(d.getDatefin());
+                bn.setDatefin(dte);
+                ret.add(bn);
+            }
+        );
+        //
+        return ret;
     }
 }

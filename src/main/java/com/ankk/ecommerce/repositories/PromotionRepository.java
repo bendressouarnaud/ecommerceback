@@ -9,5 +9,6 @@ public interface PromotionRepository extends CrudRepository<Promotion, Long> {
 
     Promotion findByIdprn(long id);
     List<Promotion> findAllByIdent(int id);
+    List<Promotion> findAllByIdprnIn(List<Long> liste);
 
 }
