@@ -19,4 +19,7 @@ public class Lienpromotion {
     @Column(name = "idart")
     private int idart;
 
+    @Column(name = "etat")
+    private int etat;
+
 }

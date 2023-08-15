@@ -495,7 +495,10 @@ public class ApiCallController {
                     be.setLienweb(d.getLienweb());
                     be.setLibelle(d.getLibelle());
                     be.setPrix(d.getPrix());
-                    be.setReduction(0);
+                    // Find a promotion :
+                    Lienpromotion ln = lienpromotionRepository.findByIdartAndEtat(d.getIdart(), 1);
+                    Promotion pn = promotionRepository.findByIdprn(ln != null ? ln.getIdpro() : 0);
+                    be.setReduction(pn != null ? pn.getReduction() : 0);
                     be.setNote(0);
                     be.setArticlerestant( d.getQuantite() - (articleAchete != null ? articleAchete.size() : 0) );
                     // Add
@@ -528,7 +531,10 @@ public class ApiCallController {
                     be.setLienweb(d.getLienweb());
                     be.setLibelle(d.getLibelle());
                     be.setPrix(d.getPrix());
-                    be.setReduction(0);
+                    // Find a promotion :
+                    Lienpromotion ln = lienpromotionRepository.findByIdartAndEtat(d.getIdart(), 1);
+                    Promotion pn = promotionRepository.findByIdprn(ln != null ? ln.getIdpro() : 0);
+                    be.setReduction(pn != null ? pn.getReduction() : 0);
                     be.setNote(0);
                     be.setArticlerestant( d.getQuantite() - (articleAchete != null ? articleAchete.size() : 0) );
                     // Add
@@ -857,6 +863,7 @@ public class ApiCallController {
         if(ln == null) ln = new Lienpromotion();
         ln.setIdart(idart);
         ln.setIdpro(idprn);
+        ln.setEtat(1);
         lienpromotionRepository.save(ln);
 
         Reponse re = new Reponse();
@@ -971,6 +978,7 @@ public class ApiCallController {
             pn.setDatefin(null);
         }
         // Save :
+        pn.setEtat(1);
         promotionRepository.save(pn);
 
         Reponse re = new Reponse();
@@ -1192,10 +1200,16 @@ public class ApiCallController {
         by.setArticle(ale.getLibelle());
         Partenaire pe = partenaireRepository.findByIdent(ale.getIdent());
         by.setEntreprise(pe.getLibelle());
-        by.setModaliteretour("Waiting");
+        // Get MODALITE RETOUR :
+        Detailmodaliteretour dl =
+            detailmodaliteretourRepository.findByIdentAndIddet(ale.getIdent(), ale.getIddet());
+        by.setModaliteretour(dl != null ? dl.getCommentaire() : "---");
         by.setDescriptionproduit(ale.getDetail());
         by.setPrix(ale.getPrix());
-        by.setReduction(0);
+        // Find a promotion :
+        Lienpromotion ln = lienpromotionRepository.findByIdartAndEtat(ale.getIdart(), 1);
+        Promotion pn = promotionRepository.findByIdprn(ln != null ? ln.getIdpro() : 0);
+        by.setReduction(pn != null ? pn.getReduction() : 0);
         by.setNombrearticle(10);
         //by.setNombrearticle(ale.getQuantite());
         // Add origin image
@@ -1504,6 +1518,42 @@ public class ApiCallController {
             }
         );
         //
+        return ret;
+    }
+
+
+    // Get ARTICLES based on iddet :
+    @CrossOrigin("*")
+    @GetMapping(value={"/getmobilepromotedarticles"})
+    private List<Beanarticledetail> getmobilepromotedarticles(){
+
+        List<Lienpromotion> articlePromoted =
+                lienpromotionRepository.findAllByEtat(1);
+        // Get ARTICLES :
+        List<Article> lesArticles = articleRepository.findAllByIdartIn(
+            articlePromoted.stream().map(Lienpromotion::getIdart).collect(Collectors.toList()));
+
+        List<Beanarticledetail> ret = new ArrayList<>();
+        lesArticles.forEach(
+                d -> {
+                    // For each ARTICLE, pick the number of those bought :
+                    List<Achat> articleAchete = achatRepository.findAllByIdartAndActif(d.getIdart(), 0);
+                    Beanarticledetail be = new Beanarticledetail();
+                    be.setIddet(d.getIddet());
+                    be.setIdart(d.getIdart());
+                    be.setLienweb(d.getLienweb());
+                    be.setLibelle(d.getLibelle());
+                    be.setPrix(d.getPrix());
+                    // Find a promotion :
+                    Lienpromotion ln = lienpromotionRepository.findByIdartAndEtat(d.getIdart(), 1);
+                    Promotion pn = promotionRepository.findByIdprn(ln != null ? ln.getIdpro() : 0);
+                    be.setReduction(pn != null ? pn.getReduction() : 0);
+                    be.setNote(0);
+                    be.setArticlerestant( d.getQuantite() - (articleAchete != null ? articleAchete.size() : 0) );
+                    // Add
+                    ret.add(be);
+                }
+        );
         return ret;
     }
 }

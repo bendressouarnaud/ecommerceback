@@ -9,5 +9,6 @@ public interface DetailmodaliteretourRepository extends
         CrudRepository<Detailmodaliteretour, Integer> {
 
     List<Detailmodaliteretour> findAllByIdent(int id);
+    Detailmodaliteretour findByIdentAndIddet(int ident, int iddet);
 
 }

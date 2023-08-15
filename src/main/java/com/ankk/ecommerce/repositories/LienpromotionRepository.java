@@ -9,5 +9,7 @@ public interface LienpromotionRepository extends CrudRepository<Lienpromotion, L
 
     Lienpromotion findByIdartAndIdpro(int idart, int idpro);
     List<Lienpromotion> findAllByIdart(int idart);
+    List<Lienpromotion> findAllByEtat(int etat);
+    Lienpromotion findByIdartAndEtat(int idart, int etat);
 
 }
