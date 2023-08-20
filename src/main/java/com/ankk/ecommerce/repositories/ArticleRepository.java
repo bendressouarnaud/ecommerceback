@@ -18,6 +18,8 @@ public interface ArticleRepository extends CrudRepository<Article, Integer> {
     List<Article> findAllByChoixAndIddetIn(int choix, List<Integer> liste);
     List<Article> findAllByIddetAndChoix(int iddet, int choix);
     Article findByIdart(int id);
+    List<Article> findFirst6ByOrderByIdartDesc();
+    List<Article> findFirst6ByIdartInOrderByIdartDesc(List<Integer> idart);
 
     /*@Query(value = "select a.idspr,a.libelle as libsousprod,c.idart,c.libelle,c.lienweb,c.prix from " +
             "sousproduit a inner join detail b on a.idspr=b.idspr inner join article c on " +

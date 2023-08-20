@@ -8,6 +8,6 @@ import java.util.List;
 @Data
 public class Beanarticlerequest {
     // A T T R I B U T E S :
-    int idcli;
+    int idcli, choixpaiement;
     List<BeanActif> liste;
 }

@@ -578,9 +578,26 @@ public class ApiCallController {
             d -> {
                 Commande ce = new Commande();
                 ce.setIdart(d.getIdart());
-                // Get Article PRICE
-                ce.setPrix(articleRepository.findByIdart(d.getIdart()).getPrix());
-                ce.setEtat(1);
+                // Get Article PRICE & Compute PERCENTAGE Price if needed :
+                int pourcentage = 0;
+                Lienpromotion lnt =
+                        lienpromotionRepository.findByIdartAndEtat(d.getIdart(), 1);
+                if(lnt != null){
+                    pourcentage =
+                            promotionRepository.findByIdprn(lnt.getIdpro()).getReduction();
+                }
+                if(pourcentage > 0){
+                    int price = articleRepository.findByIdart(d.getIdart()).getPrix();
+                    int tpPrice = ((price * pourcentage) / 100);
+                    int articlePrix = price - tpPrice;
+                    ce.setPrix(articlePrix);
+                }
+                else ce.setPrix(articleRepository.findByIdart(d.getIdart()).getPrix());
+                /*
+                1 : MOBILE MONEY
+                2 : PAIEMENT à la LIVRAISON
+                 */
+                ce.setEtat(data.getChoixpaiement());
                 try {
                     Date dateToday = new SimpleDateFormat("yyyy-MM-dd").
                             parse(dte);
@@ -1524,14 +1541,56 @@ public class ApiCallController {
 
     // Get ARTICLES based on iddet :
     @CrossOrigin("*")
-    @GetMapping(value={"/getmobilepromotedarticles"})
-    private List<Beanarticledetail> getmobilepromotedarticles(){
+    @PostMapping(value={"/getmobilepromotedarticles"})
+    private List<Beanarticledetail> getmobilepromotedarticles(@RequestBody RequeteBean rn){
 
         List<Lienpromotion> articlePromoted =
                 lienpromotionRepository.findAllByEtat(1);
         // Get ARTICLES :
-        List<Article> lesArticles = articleRepository.findAllByIdartIn(
-            articlePromoted.stream().map(Lienpromotion::getIdart).collect(Collectors.toList()));
+        List<Article> lesArticles = new ArrayList<>();
+        if(rn.getIdprd() == 0) {
+            // Get the last SIX ARTICLES
+            lesArticles = articleRepository.findFirst6ByIdartInOrderByIdartDesc(
+                    articlePromoted.stream().map(Lienpromotion::getIdart).collect(Collectors.toList()));
+        }
+        else{
+            // Get all PROMOTED ARTICLEs :
+            lesArticles = articleRepository.findAllByIdartIn(
+                    articlePromoted.stream().map(Lienpromotion::getIdart).collect(Collectors.toList()));
+        }
+
+        List<Beanarticledetail> ret = new ArrayList<>();
+        lesArticles.forEach(
+                d -> {
+                    // For each ARTICLE, pick the number of those bought :
+                    List<Achat> articleAchete = achatRepository.findAllByIdartAndActif(d.getIdart(), 0);
+                    Beanarticledetail be = new Beanarticledetail();
+                    be.setIddet(d.getIddet());
+                    be.setIdart(d.getIdart());
+                    be.setLienweb(d.getLienweb());
+                    be.setLibelle(d.getLibelle());
+                    be.setPrix(d.getPrix());
+                    // Find a promotion :
+                    Lienpromotion ln = lienpromotionRepository.findByIdartAndEtat(d.getIdart(), 1);
+                    Promotion pn = promotionRepository.findByIdprn(ln != null ? ln.getIdpro() : 0);
+                    be.setReduction(pn != null ? pn.getReduction() : 0);
+                    be.setNote(0);
+                    be.setArticlerestant( d.getQuantite() - (articleAchete != null ? articleAchete.size() : 0) );
+                    // Add
+                    ret.add(be);
+                }
+        );
+        return ret;
+    }
+
+
+    // Get 3 last ARTICLES posted :
+    @CrossOrigin("*")
+    @GetMapping(value={"/getmobilerecentarticles"})
+    private List<Beanarticledetail> getmobilerecentarticles(){
+
+        // Get ARTICLES :
+        List<Article> lesArticles = articleRepository.findFirst6ByOrderByIdartDesc();
 
         List<Beanarticledetail> ret = new ArrayList<>();
         lesArticles.forEach(
