@@ -567,61 +567,6 @@ public class ApiCallController {
     }
 
     @CrossOrigin("*")
-    @PostMapping(value={"/sendbooking"})
-    private ResponseBooking sendbooking(@RequestBody Beanarticlerequest data){
-
-        //
-        ResponseBooking rn = new ResponseBooking();
-        String dte = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-        String heure = new SimpleDateFormat("HH:mm:ss").format(new Date());
-        data.getListe().forEach(
-            d -> {
-                Commande ce = new Commande();
-                ce.setIdart(d.getIdart());
-                // Get Article PRICE & Compute PERCENTAGE Price if needed :
-                int pourcentage = 0;
-                Lienpromotion lnt =
-                        lienpromotionRepository.findByIdartAndEtat(d.getIdart(), 1);
-                if(lnt != null){
-                    pourcentage =
-                            promotionRepository.findByIdprn(lnt.getIdpro()).getReduction();
-                }
-                if(pourcentage > 0){
-                    int price = articleRepository.findByIdart(d.getIdart()).getPrix();
-                    int tpPrice = ((price * pourcentage) / 100);
-                    int articlePrix = price - tpPrice;
-                    ce.setPrix(articlePrix);
-                }
-                else ce.setPrix(articleRepository.findByIdart(d.getIdart()).getPrix());
-                /*
-                1 : MOBILE MONEY
-                2 : PAIEMENT à la LIVRAISON
-                 */
-                ce.setEtat(data.getChoixpaiement());
-                try {
-                    Date dateToday = new SimpleDateFormat("yyyy-MM-dd").
-                            parse(dte);
-                    ce.setDates(dateToday);
-                }
-                catch (Exception exc){
-                    ce.setDates(null);
-                }
-                ce.setHeure(heure);
-                ce.setIduser(data.getIdcli());
-                ce.setTraite(0);
-                commandeRepository.save(ce);
-            }
-        );
-
-        rn.setEtat(1);
-        rn.setDates(dte);
-        rn.setHeure(heure);
-
-        //
-        return rn;
-    }
-
-    @CrossOrigin("*")
     @GetMapping(value="/enregistrerPartenaire")
     private Reponse enregistrerPartenaire(
             @RequestParam(value="ident") Integer ident,

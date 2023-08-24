@@ -1,7 +1,6 @@
 package com.ankk.ecommerce.controller;
 
-import com.ankk.ecommerce.beans.BeanArticleCommande;
-import com.ankk.ecommerce.beans.BeanOngoingCommande;
+import com.ankk.ecommerce.beans.*;
 import com.ankk.ecommerce.models.*;
 import com.ankk.ecommerce.outils.Outil;
 import com.ankk.ecommerce.repositories.ArticleRepository;
@@ -55,12 +54,70 @@ public class CommandeController {
 
     // M e t h o d s :
     @CrossOrigin("*")
-    @Operation(summary = "Obtenir la liste des profils")
-    @GetMapping(value="/getongoingcommande")
-    private List<BeanOngoingCommande> getongoingcommande(HttpServletRequest request){
+    @PostMapping(value={"/sendbooking"})
+    private ResponseBooking sendbooking(@RequestBody Beanarticlerequest data){
+        //
+        ResponseBooking rn = new ResponseBooking();
+        String dte = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        String heure = new SimpleDateFormat("HH:mm:ss").format(new Date());
+        data.getListe().forEach(
+            d -> {
+                Commande ce = new Commande();
+                ce.setIdart(d.getIdart());
+                // Get Article PRICE & Compute PERCENTAGE Price if needed :
+                int pourcentage = 0;
+                Lienpromotion lnt =
+                        lienpromotionRepository.findByIdartAndEtat(d.getIdart(), 1);
+                if(lnt != null){
+                    pourcentage =
+                            promotionRepository.findByIdprn(lnt.getIdpro()).getReduction();
+                }
+                if(pourcentage > 0){
+                    int price = articleRepository.findByIdart(d.getIdart()).getPrix();
+                    int tpPrice = ((price * pourcentage) / 100);
+                    int articlePrix = price - tpPrice;
+                    ce.setPrix(articlePrix);
+                }
+                else ce.setPrix(articleRepository.findByIdart(d.getIdart()).getPrix());
+                /*
+                1 : MOBILE MONEY
+                2 : PAIEMENT à la LIVRAISON
+                 */
+                ce.setEtat(data.getChoixpaiement());
+                try {
+                    Date dateToday = new SimpleDateFormat("yyyy-MM-dd").
+                            parse(dte);
+                    ce.setDates(dateToday);
+                }
+                catch (Exception exc){
+                    ce.setDates(null);
+                }
+                ce.setHeure(heure);
+                ce.setIduser(data.getIdcli());
+                ce.setTraite(0);
+                ce.setTotal(d.getTotal());
+                ce.setDisponible(0);
+                commandeRepository.save(ce);
+            }
+        );
+
+        rn.setEtat(1);
+        rn.setDates(dte);
+        rn.setHeure(heure);
+
+        //
+        return rn;
+    }
+
+
+    @CrossOrigin("*")
+    @Operation(summary = "Obtenir la liste des commande en cours")
+    @PostMapping(value="/getongoingcommande")
+    private List<BeanOngoingCommande> getongoingcommande(@RequestParam(value="traite") Integer traite,
+                                                         HttpServletRequest request){
         ModelMapper modelMapper = new ModelMapper();
         Utilisateur ur = outil.getCompanyUser(request);
-        return commandeRepository.findAllOnGoingCommande(0, ur.getIdent()).
+        return commandeRepository.findAllOnGoingCommande(traite, ur.getIdent()).
                         stream().map(d -> modelMapper.map(d, BeanOngoingCommande.class))
                         .collect(Collectors.toList());
     }
@@ -84,34 +141,60 @@ public class CommandeController {
         }
 
         List<Commande> listeCom = commandeRepository.findAllByIduserAndDatesAndHeure(idcli, dte, heure);
-        IntStream li = listeCom.stream().mapToInt(Commande::getIdart).distinct();
-        Date finalDte = dte;
+        /*IntStream li = listeCom.stream().mapToInt(Commande::getIdart).distinct();
+        Date finalDte = dte;*/
         List<BeanArticleCommande> ret = new ArrayList<>();
-        listeCom.stream().mapToInt(Commande::getIdart).distinct().boxed().forEach(
+
+        // Process :
+        listeCom.forEach(
             d -> {
                 // Idart :
-                List<Commande> listeArticleCom =
-                        commandeRepository.findAllByIduserAndDatesAndHeureAndIdart(idcli, finalDte, heure, d);
-                Article ale = articleRepository.findByIdart(d);
+                Article ale = articleRepository.findByIdart(d.getIdart());
                 int prix = ale.getPrix();
-                Lienpromotion ln = lienpromotionRepository.findByIdartAndEtat(d, 1);
-                if(ln != null){
-                    Promotion pn = promotionRepository.findByIdprn(ln != null ? ln.getIdpro() : 0);
-                    if(pn != null){
-                        prix = ale.getPrix() - ((ale.getPrix() * pn.getReduction()) / 100);
-                    }
-                }
 
                 BeanArticleCommande be = new BeanArticleCommande();
                 be.setLibelle(ale.getLibelle());
-                be.setPrix(prix * listeArticleCom.size());
-                be.setTotal(listeArticleCom.size());
+                be.setPrix(prix);
+                be.setTotal(d.getTotal());
                 be.setLien(ale.getLienweb());
                 be.setDisponibilite(ale.getQuantite());
+                be.setIdcde(d.getIdcde());
                 ret.add(be);
             }
         );
-
         return ret;
+    }
+
+    @CrossOrigin("*")
+    @Operation(summary = "Valider les commandes")
+    @PostMapping(value="/validatecommande")
+    private Reponse validatecommande(@RequestBody Beanapprobation[] data,
+        HttpServletRequest request){
+        //
+        Utilisateur ur = outil.getCompanyUser(request);
+        Reponse re = new Reponse();
+        re.setElement("POK");
+
+        // Keep only Requests with ARTICLEs we can provide to CUSTOMER :
+        Arrays.stream(data).filter(f -> f.getApprobation() > 0).forEach(
+            d -> {
+                Commande ce = commandeRepository.findByIdcde(d.getIdcde());
+                ce.setDisponible(d.getApprobation());
+                ce.setTraite(1);
+                // Reduce the number of article :
+                Article art = articleRepository.findByIdart(ce.getIdart());
+                if((d.getApprobation() > 0) && (art.getQuantite() >= d.getApprobation())){
+                    art.setQuantite( art.getQuantite() - d.getApprobation() );
+                    articleRepository.save(art);
+                    commandeRepository.save(ce);
+                }
+            }
+        );
+
+        // Notify :
+        re.setElement("OK");
+        re.setIdentifiant("");
+        re.setProfil("");
+        return re;
     }
 }

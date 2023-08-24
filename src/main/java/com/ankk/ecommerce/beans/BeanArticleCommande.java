@@ -6,6 +6,6 @@ import lombok.Data;
 public class BeanArticleCommande {
 
     String lien, libelle;
-    int total, prix, disponibilite;
+    int total, prix, disponibilite, idcde;
 
 }

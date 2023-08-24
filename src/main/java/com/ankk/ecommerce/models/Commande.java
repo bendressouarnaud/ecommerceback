@@ -29,6 +29,12 @@ public class Commande {
     @Column(name = "prix")
     private Integer prix;
 
+    @Column(name = "total")
+    private Integer total;
+
+    @Column(name = "disponible")
+    private Integer disponible;
+
     @Column(name = "etat")
     private Integer etat;
 
