@@ -125,7 +125,7 @@ public class CommandeController {
 
     // Now get all ARTICLES
     @CrossOrigin("*")
-    @Operation(summary = "Obtenir la liste des articles issus d'une commande")
+    @Operation(summary = "Obtenir la liste des articles issus d'une nouvelle commande")
     @PostMapping(value="/getongoingarticlesfromcommande")
     private List<BeanArticleCommande> getongoingarticlesfromcommande(
             @RequestParam(value="idcli") Integer idcli,
@@ -165,6 +165,49 @@ public class CommandeController {
         return ret;
     }
 
+
+    // Now get all ARTICLES
+    @CrossOrigin("*")
+    @Operation(summary = "Obtenir la liste des articles issus d'une commande validée")
+    @PostMapping(value="/getvalidatedarticlesfromcommande")
+    private List<BeanArticleCommande> getvalidatedarticlesfromcommande(
+            @RequestParam(value="idcli") Integer idcli,
+            @RequestParam(value="dates") String dates,
+            @RequestParam(value="heure") String heure,
+            HttpServletRequest request){
+        Date dte = null;
+        try {
+            dte = new SimpleDateFormat("yyyy-MM-dd").
+                    parse(dates);
+        }
+        catch (Exception exc){
+        }
+
+        List<Commande> listeCom = commandeRepository.findAllByIduserAndDatesAndHeure(idcli, dte, heure);
+        List<BeanArticleCommande> ret = new ArrayList<>();
+
+        // Process :
+        listeCom.stream().filter(c -> (c.getTraite() ==1 && c.getDisponible() > 0)).forEach(
+                d -> {
+                    // Idart :
+                    Article ale = articleRepository.findByIdart(d.getIdart());
+                    int prix = ale.getPrix();
+
+                    BeanArticleCommande be = new BeanArticleCommande();
+                    be.setLibelle(ale.getLibelle());
+                    be.setPrix(prix);
+                    be.setTotal(0);
+                    be.setLien(ale.getLienweb());
+                    be.setDisponibilite(d.getDisponible());
+                    be.setIdcde(0);
+                    ret.add(be);
+                }
+        );
+        return ret;
+    }
+
+
+
     @CrossOrigin("*")
     @Operation(summary = "Valider les commandes")
     @PostMapping(value="/validatecommande")
@@ -196,5 +239,18 @@ public class CommandeController {
         re.setIdentifiant("");
         re.setProfil("");
         return re;
+    }
+
+    @CrossOrigin("*")
+    @Operation(summary = "Obtenir l'historique des commandes d'un client")
+    @PostMapping(value="/getmobilehistoricalcommande")
+    private List<BeanCommandeProjection> getmobilehistoricalcommande(
+            @RequestBody RequeteBean rn,
+            HttpServletRequest request){
+
+        ModelMapper modelMapper = new ModelMapper();
+        return commandeRepository.findAllCustomerCommande(rn.getIdprd()).
+                stream().map(d -> modelMapper.map(d, BeanCommandeProjection.class))
+                .collect(Collectors.toList());
     }
 }

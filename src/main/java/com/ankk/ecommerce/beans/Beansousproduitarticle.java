@@ -9,6 +9,7 @@ import java.util.List;
 @Data
 public class Beansousproduitarticle {
     String detail;
+    int iddet;
     List<Beanresumearticle> liste;
 
     public Beansousproduitarticle(){

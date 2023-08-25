@@ -432,6 +432,7 @@ public class ApiCallController {
                                 //
                                 Beansousproduitarticle be = new Beansousproduitarticle();
                                 be.setDetail(s.getLibelle());
+                                be.setIddet(s.getIddet());
                                 ltArticle.forEach(
                                         l -> {
                                             Beanresumearticle br = new Beanresumearticle();

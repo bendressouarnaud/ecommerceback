@@ -1,5 +1,6 @@
 package com.ankk.ecommerce.repositories;
 
+import com.ankk.ecommerce.beans.BeanInterfaceCommandeProjection;
 import com.ankk.ecommerce.beans.BeanOngoingCommande;
 import com.ankk.ecommerce.beans.BeanOngoingCommandeProjection;
 import com.ankk.ecommerce.models.Commande;
@@ -22,5 +23,13 @@ public interface CommandeRepository extends CrudRepository<Commande, Integer> {
             ",b.nom,b.prenom,b.numero",
             nativeQuery = true)
     List<BeanOngoingCommandeProjection> findAllOnGoingCommande(int traite, int ident);
+
+
+    // Liste des commandes pau 'CLIENT' :
+    @Query(value = "select a.iduser, a.dates, a.heure, count(a.idcde) as nbrearticle, count(a.traite) as traites," +
+            "sum(a.disponible) as demandeconfirme, sum(a.total) as demandeorigine, sum(a.prix) as montant from commande a " +
+            "where a.iduser = ?1 group by a.iduser, a.dates, a.heure",
+            nativeQuery = true)
+    List<BeanInterfaceCommandeProjection> findAllCustomerCommande(int idcl);
 
 }

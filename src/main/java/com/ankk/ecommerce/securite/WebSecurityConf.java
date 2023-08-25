@@ -55,6 +55,7 @@ public class WebSecurityConf extends WebSecurityConfigurerAdapter {
                 "/getmobileallsousproduitsbyidprd","/getmobileallsousproduitsarticles",
                 "/getmobilealldetailsarticles","/getmobilearticlesBasedonLib",
                         "/getmobilepromotedarticles","/getmobilerecentarticles",
+                        "/getmobilehistoricalcommande",
                         "/getmobilealldetailsbyidspr","/getmobilearticleinformationbyidart",
                         "/v3/**","/swagger-ui**","/swagger-ui/**"
                 ).permitAll().anyRequest().authenticated()
