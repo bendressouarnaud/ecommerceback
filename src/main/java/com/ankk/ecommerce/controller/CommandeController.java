@@ -1,6 +1,7 @@
 package com.ankk.ecommerce.controller;
 
 import com.ankk.ecommerce.beans.*;
+import com.ankk.ecommerce.mesobjets.TachesService;
 import com.ankk.ecommerce.models.*;
 import com.ankk.ecommerce.outils.Outil;
 import com.ankk.ecommerce.repositories.ArticleRepository;
@@ -23,9 +24,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 @RestController
 @Tag(name="ApiCommande")
@@ -39,6 +40,8 @@ public class CommandeController {
     PromotionRepository promotionRepository;
     @Autowired
     LienpromotionRepository lienpromotionRepository;
+    @Autowired
+    TachesService tachesService;
     @Autowired
     ArticleRepository articleRepository;
     @Autowired
@@ -97,6 +100,8 @@ public class CommandeController {
                 ce.setTraite(0);
                 ce.setTotal(d.getTotal());
                 ce.setDisponible(0);
+                ce.setEmission(0);
+                ce.setLivre(0);
                 commandeRepository.save(ce);
             }
         );
@@ -208,6 +213,76 @@ public class CommandeController {
 
 
 
+
+    @CrossOrigin("*")
+    @Operation(summary = "Signaler l'émission de la COMMANDE au CLIENT")
+    @PostMapping(value="/emissioncolis")
+    private Reponse emissioncolis(
+            @RequestParam(value="idcli") Integer idcli,
+            @RequestParam(value="dates") String dates,
+            @RequestParam(value="heure") String heure,
+            HttpServletRequest request){
+        Date dte = null;
+        try {
+            dte = new SimpleDateFormat("yyyy-MM-dd").parse(dates);
+        }
+        catch (Exception exc){}
+
+        List<Commande> listeCom = commandeRepository.findAllByIduserAndDatesAndHeure(idcli, dte, heure);
+        // Only COMMANDE for which 'TRAITE' = 1
+        listeCom.forEach(
+            d -> {
+                Commande ce = commandeRepository.findByIdcde(d.getIdcde());
+                ce.setEmission(1);
+                commandeRepository.save(ce);
+
+                // Notify the USER
+            }
+        );
+
+        Reponse re = new Reponse();
+        re.setElement("OK");
+        re.setIdentifiant("");
+        re.setProfil("");
+        return re;
+    }
+
+
+    @CrossOrigin("*")
+    @Operation(summary = "Enregistrer l'ACTION de LIVRAISON de la COMMANDE au CLIENT")
+    @PostMapping(value="/livraisonCommande")
+    private Reponse livraisonCommande(
+            @RequestParam(value="idcli") Integer idcli,
+            @RequestParam(value="dates") String dates,
+            @RequestParam(value="heure") String heure,
+            HttpServletRequest request){
+        Date dte = null;
+        try {
+            dte = new SimpleDateFormat("yyyy-MM-dd").parse(dates);
+        }
+        catch (Exception exc){}
+
+        List<Commande> listeCom = commandeRepository.findAllByIduserAndDatesAndHeure(idcli, dte, heure);
+        // Only COMMANDE for which 'TRAITE' = 1
+        listeCom.forEach(
+            d -> {
+                Commande ce = commandeRepository.findByIdcde(d.getIdcde());
+                ce.setLivre(1);
+                commandeRepository.save(ce);
+
+                // Notify the USER
+            }
+        );
+
+        Reponse re = new Reponse();
+        re.setElement("OK");
+        re.setIdentifiant("");
+        re.setProfil("");
+        return re;
+    }
+
+
+
     @CrossOrigin("*")
     @Operation(summary = "Valider les commandes")
     @PostMapping(value="/validatecommande")
@@ -216,7 +291,9 @@ public class CommandeController {
         //
         Utilisateur ur = outil.getCompanyUser(request);
         Reponse re = new Reponse();
-        re.setElement("POK");
+        AtomicReference<String> dte = new AtomicReference<>("");
+        AtomicInteger iduser = new AtomicInteger();
+        AtomicReference<String> heu = new AtomicReference<>("");
 
         // Keep only Requests with ARTICLEs we can provide to CUSTOMER :
         Arrays.stream(data).filter(f -> f.getApprobation() > 0).forEach(
@@ -230,9 +307,21 @@ public class CommandeController {
                     art.setQuantite( art.getQuantite() - d.getApprobation() );
                     articleRepository.save(art);
                     commandeRepository.save(ce);
+
+                    // Notify USER :
+                    dte.set(new SimpleDateFormat("yyyy-MM-dd").format(
+                            ce.getDates()));
+                    iduser.set(ce.getIduser());
+                    heu.set(ce.getHeure());
                 }
             }
         );
+
+        //
+        if(!dte.get().isEmpty()) {
+            tachesService.
+                    notifyCustomerForOngoingCommand(iduser.get(), dte.get(), heu.get());
+        }
 
         // Notify :
         re.setElement("OK");

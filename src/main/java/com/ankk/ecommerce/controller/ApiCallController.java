@@ -1163,6 +1163,7 @@ public class ApiCallController {
         by.setArticle(ale.getLibelle());
         Partenaire pe = partenaireRepository.findByIdent(ale.getIdent());
         by.setEntreprise(pe.getLibelle());
+        by.setContact(pe.getContact());
         // Get MODALITE RETOUR :
         Detailmodaliteretour dl =
             detailmodaliteretourRepository.findByIdentAndIddet(ale.getIdent(), ale.getIddet());

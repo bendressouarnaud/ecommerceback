@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class BeanOngoingCommande {
-    int idcli, total;
+    int idcli, total, emission, livre;
     String dates, heure,nom,prenom,numero;
 }

@@ -9,5 +9,7 @@ public interface BeanOngoingCommandeProjection {
     String getNom();
     String getPrenom();
     String getNumero();
+    int getEmission();
+    int getLivre();
 
 }

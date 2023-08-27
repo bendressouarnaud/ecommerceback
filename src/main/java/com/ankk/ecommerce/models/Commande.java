@@ -40,4 +40,10 @@ public class Commande {
 
     @Column(name = "traite")
     private Integer traite;
+
+    @Column(name = "emission")
+    private Integer emission;
+
+    @Column(name = "livre")
+    private Integer livre;
 }

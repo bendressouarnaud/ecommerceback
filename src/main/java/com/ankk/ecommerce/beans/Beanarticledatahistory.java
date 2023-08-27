@@ -11,7 +11,7 @@ public class Beanarticledatahistory {
 
     List<Imagesupplement> images;
     List<Commentaire> comments;
-    String article, entreprise, modaliteretour, descriptionproduit;
+    String article, entreprise, modaliteretour, descriptionproduit, contact;
     int prix, reduction, nombrearticle;
 
 }

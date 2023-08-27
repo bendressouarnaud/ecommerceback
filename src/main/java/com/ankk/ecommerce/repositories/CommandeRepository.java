@@ -18,9 +18,10 @@ public interface CommandeRepository extends CrudRepository<Commande, Integer> {
     List<Commande> findAllByIduserAndDatesAndHeureAndIdart(int iduser, Date dates, String heure, int idart);
     Commande findByIdcde(int idcde);
 
-    @Query(value = "select b.idcli, a.dates, a.heure,b.nom,b.prenom,b.numero, count(a.idcde) as total from commande a inner join client b on a.iduser=b.idcli " +
-            "inner join article c on c.idart=a.idart where a.traite = ?1 and c.ident = ?2 group by b.idcli, a.dates, a.heure" +
-            ",b.nom,b.prenom,b.numero",
+    @Query(value = "select b.idcli, a.dates, a.heure,b.nom,b.prenom,b.numero, count(a.idcde) as total" +
+            ",sum(a.emission) as emission, sum(livre) as livre from commande a inner join " +
+            "client b on a.iduser=b.idcli inner join article c on c.idart=a.idart where a.traite = ?1 and " +
+            "c.ident = ?2 group by b.idcli, a.dates, a.heure,b.nom,b.prenom,b.numero",
             nativeQuery = true)
     List<BeanOngoingCommandeProjection> findAllOnGoingCommande(int traite, int ident);
 
