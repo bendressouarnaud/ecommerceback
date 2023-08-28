@@ -33,9 +33,9 @@ public class TachesService {
                 .build();
         try {
             FirebaseMessaging.getInstance().send(me);
-            System.out.println("Notif envoyé");
+            //System.out.println("Notif envoyé");
         } catch (FirebaseMessagingException e) {
-            System.out.println("FirebaseMessagingException : "+e.toString());
+            //System.out.println("FirebaseMessagingException : "+e.toString());
         }
     }
 }

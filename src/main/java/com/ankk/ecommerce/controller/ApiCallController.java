@@ -101,7 +101,7 @@ public class ApiCallController {
                 //System.out.println("getInstance");
             }
         } catch (IOException e) {
-            //log.error("Create FirebaseApp Error", e);
+            //System.out.println("IOException : "+e.toString());
         }
     }
 
