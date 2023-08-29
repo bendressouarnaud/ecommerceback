@@ -228,6 +228,10 @@ public class CommandeController {
         }
         catch (Exception exc){}
 
+        AtomicReference<String> dt = new AtomicReference<>("");
+        AtomicInteger iduser = new AtomicInteger();
+        AtomicReference<String> heu = new AtomicReference<>("");
+
         List<Commande> listeCom = commandeRepository.findAllByIduserAndDatesAndHeure(idcli, dte, heure);
         // Only COMMANDE for which 'TRAITE' = 1
         listeCom.forEach(
@@ -237,8 +241,17 @@ public class CommandeController {
                 commandeRepository.save(ce);
 
                 // Notify the USER
+                dt.set(new SimpleDateFormat("yyyy-MM-dd").format(
+                        ce.getDates()));
+                iduser.set(ce.getIduser());
+                heu.set(ce.getHeure());
             }
         );
+
+        if(!dt.get().isEmpty()) {
+            tachesService.
+                    notifyCustomerForOngoingCommand(iduser.get(), "2", dt.get(), heu.get());
+        }
 
         Reponse re = new Reponse();
         re.setElement("OK");
@@ -320,7 +333,7 @@ public class CommandeController {
         //
         if(!dte.get().isEmpty()) {
             tachesService.
-                    notifyCustomerForOngoingCommand(iduser.get(), dte.get(), heu.get());
+                    notifyCustomerForOngoingCommand(iduser.get(), "1", dte.get(), heu.get());
         }
 
         // Notify :

@@ -19,7 +19,7 @@ public class TachesService {
 
     // M e t h o d s   :
     @Async
-    public void notifyCustomerForOngoingCommand(int idcli, String dates, String heure){
+    public void notifyCustomerForOngoingCommand(int idcli, String objet, String dates, String heure){
         //
         Client ct = clientRepository.findByIdcli(idcli);
 
@@ -27,7 +27,7 @@ public class TachesService {
         Message me = Message.builder()
                 //.setTopic("/topics/"+mie.getCode())
                 .setToken(ct.getFcmtoken())
-                .putData("objet", "1")  // COMMANDE en cours de traiement
+                .putData("objet", objet)  // COMMANDE en cours de traiement
                 .putData("dates", dates)
                 .putData("heure", heure)
                 .build();
