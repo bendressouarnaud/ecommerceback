@@ -9,4 +9,6 @@ public interface BeanInterfaceCommandeProjection {
     int getDemandeconfirme();
     int getDemandeorigine();
     int getMontant();
+    int getEmissions();
+    int getLivres();
 }

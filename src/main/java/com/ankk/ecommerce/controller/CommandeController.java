@@ -4,10 +4,7 @@ import com.ankk.ecommerce.beans.*;
 import com.ankk.ecommerce.mesobjets.TachesService;
 import com.ankk.ecommerce.models.*;
 import com.ankk.ecommerce.outils.Outil;
-import com.ankk.ecommerce.repositories.ArticleRepository;
-import com.ankk.ecommerce.repositories.CommandeRepository;
-import com.ankk.ecommerce.repositories.LienpromotionRepository;
-import com.ankk.ecommerce.repositories.PromotionRepository;
+import com.ankk.ecommerce.repositories.*;
 import com.ankk.ecommerce.securite.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -32,10 +29,14 @@ import java.util.stream.Collectors;
 @Tag(name="ApiCommande")
 public class CommandeController {
 
+    // Notes :
+    // http://localhost:8080/backendcommerce/swagger-ui/index.html#/
 
     // A t t r i b u t e s :
     @PersistenceUnit
     EntityManagerFactory emf;
+    @Autowired
+    NotificationcommandeRepository notificationcommandeRepository;
     @Autowired
     PromotionRepository promotionRepository;
     @Autowired
@@ -253,6 +254,19 @@ public class CommandeController {
                     notifyCustomerForOngoingCommand(iduser.get(), "2", dt.get(), heu.get());
         }
 
+        // Trace action :
+        Notificationcommande ne = new Notificationcommande();
+        try {
+            ne.setDates(new SimpleDateFormat("yyyy-MM-dd").
+                    parse(dt.get()));
+        } catch (Exception exc) {
+            ne.setDates(null);
+        }
+        ne.setHeure(heu.get());
+        ne.setStatut(2);
+        ne.setIdcli(iduser.get());
+        notificationcommandeRepository.save(ne);
+
         Reponse re = new Reponse();
         re.setElement("OK");
         re.setIdentifiant("");
@@ -299,6 +313,19 @@ public class CommandeController {
             tachesService.
                 notifyCustomerForOngoingCommand(iduser.get(), "3", dt.get(), heu.get());
         }
+
+        // Trace action :
+        Notificationcommande ne = new Notificationcommande();
+        try {
+            ne.setDates(new SimpleDateFormat("yyyy-MM-dd").
+                    parse(dt.get()));
+        } catch (Exception exc) {
+            ne.setDates(null);
+        }
+        ne.setHeure(heu.get());
+        ne.setStatut(3);
+        ne.setIdcli(iduser.get());
+        notificationcommandeRepository.save(ne);
 
         Reponse re = new Reponse();
         re.setElement("OK");
@@ -349,6 +376,19 @@ public class CommandeController {
                     notifyCustomerForOngoingCommand(iduser.get(), "1", dte.get(), heu.get());
         }
 
+        // Trace action :
+        Notificationcommande ne = new Notificationcommande();
+        try {
+            ne.setDates(new SimpleDateFormat("yyyy-MM-dd").
+                    parse(dte.get()));
+        } catch (Exception exc) {
+            ne.setDates(null);
+        }
+        ne.setHeure(heu.get());
+        ne.setStatut(1);
+        ne.setIdcli(iduser.get());
+        notificationcommandeRepository.save(ne);
+
         // Notify :
         re.setElement("OK");
         re.setIdentifiant("");
@@ -367,5 +407,47 @@ public class CommandeController {
         return commandeRepository.findAllCustomerCommande(rn.getIdprd()).
                 stream().map(d -> modelMapper.map(d, BeanCommandeProjection.class))
                 .collect(Collectors.toList());
+    }
+
+
+    @CrossOrigin("*")
+    @Operation(summary = "Obtenir les articles composant une commande d'un client")
+    @PostMapping(value="/getcustomercommandearticle")
+    private BeanArticleHistoCommande getcustomercommandearticle(
+            @RequestBody RequeteHistoCommande re,
+            HttpServletRequest request){
+
+        Date dte = null;
+        try {
+            dte = new SimpleDateFormat("yyyy-MM-dd").parse(re.getDates());
+        }
+        catch (Exception exc){}
+
+        List<Beanresumearticle> listearticle = new ArrayList<>();
+        AtomicInteger total = new AtomicInteger(0);
+        AtomicInteger prix = new AtomicInteger(0);
+        List<Commande> listeCom = commandeRepository.findAllByIduserAndDatesAndHeure(re.getIdcli(), dte, re.getHeure());
+        listeCom.forEach(
+            d -> {
+                Beanresumearticle be = new Beanresumearticle();
+                be.setIdart(d.getIdart()); // Set TOTAL ARTICLE
+                be.setPrix(d.getPrix());
+                // Get ARTICLE
+                Article ae = articleRepository.findByIdart(d.getIdart());
+                be.setLibelle(ae.getLibelle());
+                be.setLienweb(ae.getLienweb());
+                total.set( total.get() + d.getTotal() );
+                prix.set( prix.get() + (d.getPrix() * d.getTotal()) );
+                listearticle.add(be);
+            }
+        );
+
+        BeanArticleHistoCommande rt = new BeanArticleHistoCommande();
+        rt.setTotalprix(prix.get());
+        rt.setTotalarticle(total.get());
+        rt.setListearticle(listearticle);
+
+        //
+        return rt;
     }
 }

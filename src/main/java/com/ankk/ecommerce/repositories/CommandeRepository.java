@@ -28,7 +28,8 @@ public interface CommandeRepository extends CrudRepository<Commande, Integer> {
 
     // Liste des commandes pau 'CLIENT' :
     @Query(value = "select a.iduser, a.dates, a.heure, count(a.idcde) as nbrearticle, count(a.traite) as traites," +
-            "sum(a.disponible) as demandeconfirme, sum(a.total) as demandeorigine, sum(a.prix) as montant from commande a " +
+            "sum(a.disponible) as demandeconfirme, sum(a.total) as demandeorigine, sum(a.prix) as montant," +
+            "sum(a.emission) as emissions, sum(a.livre) as livres from commande a " +
             "where a.iduser = ?1 group by a.iduser, a.dates, a.heure",
             nativeQuery = true)
     List<BeanInterfaceCommandeProjection> findAllCustomerCommande(int idcl);
