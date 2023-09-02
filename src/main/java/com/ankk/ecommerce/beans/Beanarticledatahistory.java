@@ -10,8 +10,8 @@ import java.util.List;
 public class Beanarticledatahistory {
 
     List<Imagesupplement> images;
-    List<Commentaire> comments;
+    List<BeanCommentaireContenu> comments;
     String article, entreprise, modaliteretour, descriptionproduit, contact;
-    int prix, reduction, nombrearticle;
+    int prix, reduction, nombrearticle, autorisecommentaire, commentaireexiste;
 
 }

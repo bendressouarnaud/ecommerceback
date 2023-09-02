@@ -38,6 +38,8 @@ public class CommandeController {
     @Autowired
     NotificationcommandeRepository notificationcommandeRepository;
     @Autowired
+    CommentaireRepository commentaireRepository;
+    @Autowired
     PromotionRepository promotionRepository;
     @Autowired
     LienpromotionRepository lienpromotionRepository;
@@ -450,4 +452,38 @@ public class CommandeController {
         //
         return rt;
     }
+
+    @CrossOrigin("*")
+    @Operation(summary = "Enregistrer le commentaire d'un client lié à un article")
+    @PostMapping(value="/sendmobilecomment")
+    private RequeteBean sendmobilecomment(
+            @RequestBody BeanCommentRequest bt,
+            HttpServletRequest request){
+
+        Commentaire ce = new Commentaire();
+        ce.setIdcli(bt.getIdcli());
+        ce.setIdart(bt.getIdart());
+        ce.setNote(bt.getNote());
+        ce.setAppreciation("");
+        ce.setCommentaire(bt.getCommentaire());
+
+        String dte = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        String heure = new SimpleDateFormat("HH:mm:ss").format(new Date());
+        try {
+            Date dateToday = new SimpleDateFormat("yyyy-MM-dd").
+                    parse(dte);
+            ce.setDates(dateToday);
+        }
+        catch (Exception exc){
+            ce.setDates(null);
+        }
+        ce.setHeure(heure);
+        commentaireRepository.save(ce);
+
+        //
+        RequeteBean rn = new RequeteBean();
+        rn.setIdprd(1);
+        return rn;
+    }
+
 }

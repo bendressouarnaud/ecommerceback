@@ -14,6 +14,7 @@ import java.util.List;
 public interface CommandeRepository extends CrudRepository<Commande, Integer> {
 
     List<Commande> findAllByEtat(int etat);
+    List<Commande> findAllByIduserAndIdartAndLivre(int iduser, int idart, int livre);
     List<Commande> findAllByIduserAndDatesAndHeure(int iduser, Date dates, String heure);
     List<Commande> findAllByIduserAndDatesAndHeureAndIdart(int iduser, Date dates, String heure, int idart);
     Commande findByIdcde(int idcde);

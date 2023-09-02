@@ -1151,14 +1151,28 @@ public class ApiCallController {
     // Get ARTICLES based on iddet :
     @CrossOrigin("*")
     @PostMapping(value={"/getmobilearticleinformationbyidart"})
-    private Beanarticledatahistory getmobilearticleinformationbyidart(@RequestBody RequeteBean rn){
+    private Beanarticledatahistory getmobilearticleinformationbyidart(
+            @RequestBody RequeteBeanArticle rn){
         // Get images :
-        List<Imagesupplement> imagesSup = imagesupplementRepository.findAllByIdart(rn.getIdprd());
+        List<Imagesupplement> imagesSup = imagesupplementRepository.findAllByIdart(rn.getIdart());
         // Get Comments :
-        List<Commentaire> comments = commentaireRepository.findAllByIdart(rn.getIdprd());
+        List<Commentaire> comments = commentaireRepository.findAllByIdart(rn.getIdart());
+        List<BeanCommentaireContenu> lescomments = new ArrayList<>();
+        comments.forEach(
+            d -> {
+                BeanCommentaireContenu bu = new BeanCommentaireContenu();
+                bu.setNote(d.getNote());
+                bu.setCommentaire(d.getCommentaire());
+                Client clt = clientRepository.findByIdcli(d.getIdcli());
+                bu.setClient(clt != null ? (clt.getNom()+" "+clt.getPrenom()) : "---");
+                String dte = new SimpleDateFormat("yyyy-MM-dd").format(d.getDates());
+                bu.setDates(dte);
+                lescomments.add(bu);
+            }
+        );
 
-        // Get Aricle :
-        Article ale = articleRepository.findByIdart(rn.getIdprd());
+        // Get Article :
+        Article ale = articleRepository.findByIdart(rn.getIdart());
         Beanarticledatahistory by = new Beanarticledatahistory();
         by.setArticle(ale.getLibelle());
         Partenaire pe = partenaireRepository.findByIdent(ale.getIdent());
@@ -1181,7 +1195,16 @@ public class ApiCallController {
         imagesSup.add(new Imagesupplement(0L, ale.getLienweb(), ale.getIdart()));
         //
         by.setImages(imagesSup);
-        by.setComments(comments);
+        by.setComments(lescomments);
+        // Check if user has already bought this ARTICLE :
+        Commande cde = commandeRepository.findAllByIduserAndIdartAndLivre(
+                rn.getIduser(), rn.getIdart(), 1).stream().findFirst().
+                orElse(null);
+        by.setAutorisecommentaire( cde != null ? 1 : 0);
+        // Check if user has made COMMENTS
+        Commentaire cte = commentaireRepository.findAllByIdartAndIdcli(
+                rn.getIdart(), rn.getIduser()).stream().findFirst().orElse(null);
+        by.setCommentaireexiste(cte != null ? 1 : 0);
         return by;
     }
 

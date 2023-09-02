@@ -26,6 +26,9 @@ public class Commentaire {
     @Column(name = "dates")
     private Date dates;
 
+    @Column(name = "heure")
+    private String heure;
+
     @Column(name = "idcli")
     private int idcli;
 
