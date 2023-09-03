@@ -1184,11 +1184,15 @@ public class ApiCallController {
         by.setModaliteretour(dl != null ? dl.getCommentaire() : "---");
         by.setDescriptionproduit(ale.getDetail());
         by.setPrix(ale.getPrix());
+        //
+        by.setIddet(ale.getIddet());
+        // This ONE should be come from 'COME' from 'COMMENTAIRE' table :
+        by.setNote(0);
         // Find a promotion :
         Lienpromotion ln = lienpromotionRepository.findByIdartAndEtat(ale.getIdart(), 1);
         Promotion pn = promotionRepository.findByIdprn(ln != null ? ln.getIdpro() : 0);
         by.setReduction(pn != null ? pn.getReduction() : 0);
-        by.setNombrearticle(10);
+        by.setNombrearticle( ale.getQuantite() );
         //by.setNombrearticle(ale.getQuantite());
         // Add origin image
         if(imagesSup == null) imagesSup = new ArrayList<>();

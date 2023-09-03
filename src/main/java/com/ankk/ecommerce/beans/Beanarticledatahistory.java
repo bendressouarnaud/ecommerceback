@@ -13,5 +13,5 @@ public class Beanarticledatahistory {
     List<BeanCommentaireContenu> comments;
     String article, entreprise, modaliteretour, descriptionproduit, contact;
     int prix, reduction, nombrearticle, autorisecommentaire, commentaireexiste;
-
+    int iddet, note;
 }

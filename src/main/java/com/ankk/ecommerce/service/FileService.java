@@ -13,6 +13,8 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -41,6 +43,8 @@ public class FileService {
     SousproduitRepository sousproduitRepository;
     @Autowired
     ProduitRepository produitRepository;
+    @Autowired
+    ResourceLoader resourceLoader;
 
 
     public void upload(MultipartFile multipartFile, String libproduit, int mode, int idprd,
@@ -72,8 +76,11 @@ public class FileService {
         BlobId blobId = BlobId.of("gestionpanneaux.appspot.com", (fileName));
         //BlobId blobId = BlobId.of("gestionpanneaux.appspot.com", ("produits/"+fileName));
         BlobInfo blobInfo = BlobInfo.newBuilder(blobId).setContentType("media").build();
+        /*Credentials credentials = GoogleCredentials.fromStream(
+            new FileInputStream(
+            "./src/main/resources/gestionpanneaux-firebase-adminsdk-q0rzg-0eef98bb76.json"));*/
         Credentials credentials = GoogleCredentials.fromStream(
-                new FileInputStream("./src/main/resources/gestionpanneaux-firebase-adminsdk-q0rzg-0eef98bb76.json"));
+                new ClassPathResource(firebaseConfig).getInputStream());
         Storage storage = StorageOptions.newBuilder().setCredentials(credentials).build().getService();
 
         // Get the file Web's name from FIREBASE STORAGE :
