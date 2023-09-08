@@ -791,9 +791,11 @@ public class ApiCallController {
     @CrossOrigin("*")
     @PostMapping("/savearticleandpromotion")
     public Reponse savearticleandpromotion(@RequestParam(name="id") Integer idart,
-                                @RequestParam(name="actif") Integer actif,
-                                @RequestParam(name="idprn") Integer idprn,
-                                HttpServletRequest request
+        @RequestParam(name="article", required = false) MultipartFile imgArticle,
+        @RequestParam(name="actif") Integer actif,
+        @RequestParam(name="idprn") Integer idprn,
+        @RequestParam(name="nombrearticle") Integer nombrearticle,
+        HttpServletRequest request
     ) {
 
         String identifiant = getBackUserConnectedName(request);
@@ -822,12 +824,27 @@ public class ApiCallController {
             ur = utilisateurRepository.findByIdentifiant(String.valueOf(resultat.get(0)[1]));
         }
 
-        Lienpromotion ln = lienpromotionRepository.findByIdartAndIdpro(idart, idprn);
-        if(ln == null) ln = new Lienpromotion();
-        ln.setIdart(idart);
-        ln.setIdpro(idprn);
-        ln.setEtat(1);
-        lienpromotionRepository.save(ln);
+        if(idprn > 0) {
+            Lienpromotion ln = lienpromotionRepository.findByIdartAndIdpro(idart, idprn);
+            if (ln == null) ln = new Lienpromotion();
+            ln.setIdart(idart);
+            ln.setIdpro(idprn);
+            ln.setEtat(1);
+            lienpromotionRepository.save(ln);
+        }
+
+        // Refresh article 'quantite' if needed :
+        if(nombrearticle > 0){
+            Article ale = articleRepository.findByIdart(idart);
+            ale.setQuantite(nombrearticle);
+            articleRepository.save(ale);
+        }
+
+        if (imgArticle != null) {
+            String heure = new SimpleDateFormat("HH:mm:ss").format(new Date());
+            fileService.upload(imgArticle, heure.replaceAll(":",""),
+                    4, idart, null, null);
+        }
 
         Reponse re = new Reponse();
         re.setElement("OK");
@@ -1456,6 +1473,15 @@ public class ApiCallController {
 
         //  Return LIST :
         List<Beanpromotion> lesData = new ArrayList<>();
+        // Set the defaul value :
+        Beanpromotion btn = new Beanpromotion();
+        btn.setIdprn(0);
+        btn.setReduction(0);
+        btn.setLibelle("---");
+        // Debut
+        btn.setDatedebut("");
+        btn.setDatefin("");
+        lesData.add(btn);
 
         // Get all PROMOTION related to 'ENTREPRISE' :
         List<Promotion> lesPrm =
@@ -1485,7 +1511,7 @@ public class ApiCallController {
 
     @CrossOrigin("*")
     @PostMapping("/getarticlepromotion")
-    public List<Beanpromotion> getarticlepromotion(@RequestParam(name="id") int idart,
+    public BeanArticleUpdate getarticlepromotion(@RequestParam(name="id") int idart,
                                  HttpServletRequest request
     ) {
         List<Lienpromotion> liste = lienpromotionRepository.findAllByIdart(idart);
@@ -1508,8 +1534,15 @@ public class ApiCallController {
                 ret.add(bn);
             }
         );
+
+        BeanArticleUpdate bp = new BeanArticleUpdate();
+        bp.setPromotion(ret);
+        Article ar = articleRepository.findByIdart(idart);
+        bp.setQuantite(ar.getQuantite());
+        bp.setActif(ar.getChoix());
+
         //
-        return ret;
+        return bp;
     }
 
 

@@ -1,13 +1,7 @@
 package com.ankk.ecommerce.service;
 
-import com.ankk.ecommerce.models.Article;
-import com.ankk.ecommerce.models.Detail;
-import com.ankk.ecommerce.models.Produit;
-import com.ankk.ecommerce.models.Sousproduit;
-import com.ankk.ecommerce.repositories.ArticleRepository;
-import com.ankk.ecommerce.repositories.DetailRepository;
-import com.ankk.ecommerce.repositories.ProduitRepository;
-import com.ankk.ecommerce.repositories.SousproduitRepository;
+import com.ankk.ecommerce.models.*;
+import com.ankk.ecommerce.repositories.*;
 import com.google.auth.Credentials;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.*;
@@ -43,6 +37,8 @@ public class FileService {
     SousproduitRepository sousproduitRepository;
     @Autowired
     ProduitRepository produitRepository;
+    @Autowired
+    ImagesupplementRepository imagesupplementRepository;
     @Autowired
     ResourceLoader resourceLoader;
 
@@ -133,6 +129,14 @@ public class FileService {
                 dl.setLibelle(det.getLibelle());
                 dl.setLienweb(lienweb);
                 detailRepository.save(dl);
+                break;
+
+            case 4:
+                // Add it in 'imagesupplement' table :
+                Imagesupplement it = new Imagesupplement();
+                it.setIdart(idprd);
+                it.setLienweb(lienweb);
+                imagesupplementRepository.save(it);
                 break;
         }
 
