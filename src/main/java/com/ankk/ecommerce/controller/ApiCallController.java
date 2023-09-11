@@ -483,13 +483,14 @@ public class ApiCallController {
     // Get ARTICLES based on iddet :
     @CrossOrigin("*")
     @PostMapping(value={"/getarticlesbasedoniddet"})
-    private List<Beanarticledetail> getarticlesbasedoniddet(@RequestBody RequeteBean rn){
+    private List<BeanResumeArticleDetail> getarticlesbasedoniddet(@RequestBody RequeteBean rn){
         List<Article> lte = articleRepository.findAllByIddetAndChoix(rn.getIdprd(), 1);
-        List<Beanarticledetail> ret = new ArrayList<>();
+        List<BeanResumeArticleDetail> ret = new ArrayList<>();
         lte.forEach(
                 d -> {
                     // For each ARTICLE, pick the number of those bought :
                     List<Achat> articleAchete = achatRepository.findAllByIdartAndActif(d.getIdart(), 0);
+                    BeanResumeArticleDetail bl = new BeanResumeArticleDetail();
                     Beanarticledetail be = new Beanarticledetail();
                     be.setIddet(d.getIddet());
                     be.setIdart(d.getIdart());
@@ -500,10 +501,21 @@ public class ApiCallController {
                     Lienpromotion ln = lienpromotionRepository.findByIdartAndEtat(d.getIdart(), 1);
                     Promotion pn = promotionRepository.findByIdprn(ln != null ? ln.getIdpro() : 0);
                     be.setReduction(pn != null ? pn.getReduction() : 0);
+                    // Set NOTE :
+                    List<Commentaire> comments = commentaireRepository.findAllByIdart(d.getIdart());
+                    double noteArt = 0;
+                    int totalComment = comments.isEmpty() ? 0 : comments.size();
+                    if(!comments.isEmpty()){
+                        noteArt = comments.stream().mapToInt(Commentaire::getNote).average().orElse(0);
+                    }
                     be.setNote(0);
                     be.setArticlerestant( d.getQuantite() - (articleAchete != null ? articleAchete.size() : 0) );
+                    bl.setNoteart(noteArt);
+                    bl.setTotalcomment(totalComment);
+                    bl.setBeanarticle(be);
+
                     // Add
-                    ret.add(be);
+                    ret.add(bl);
                 }
         );
         return ret;
@@ -512,7 +524,7 @@ public class ApiCallController {
 
     @CrossOrigin("*")
     @PostMapping(value={"/getmobilearticlesBasedonLib"})
-    private List<Beanarticledetail> getmobilearticlesBasedonLib(@RequestBody RequestBean rn){
+    private List<BeanResumeArticleDetail> getmobilearticlesBasedonLib(@RequestBody RequestBean rn){
 
         // Sous-Produit lib
         Sousproduit st = sousproduitRepository.findByLibelle(rn.getLib());
@@ -521,11 +533,12 @@ public class ApiCallController {
         // Then, ARTICLE :
         List<Article> lesArt = articleRepository.findAllByChoixAndIddetIn(1,
                 lesDet.stream().map(Detail::getIddet).collect(Collectors.toList()));
-        List<Beanarticledetail> ret = new ArrayList<>();
+        List<BeanResumeArticleDetail> ret = new ArrayList<>();
         lesArt.forEach(
                 d -> {
                     // For each ARTICLE, pick the number of those bought :
                     List<Achat> articleAchete = achatRepository.findAllByIdartAndActif(d.getIdart(), 0);
+                    BeanResumeArticleDetail bl = new BeanResumeArticleDetail();
                     Beanarticledetail be = new Beanarticledetail();
                     be.setIddet(d.getIddet());
                     be.setIdart(d.getIdart());
@@ -536,10 +549,21 @@ public class ApiCallController {
                     Lienpromotion ln = lienpromotionRepository.findByIdartAndEtat(d.getIdart(), 1);
                     Promotion pn = promotionRepository.findByIdprn(ln != null ? ln.getIdpro() : 0);
                     be.setReduction(pn != null ? pn.getReduction() : 0);
+                    // Set NOTE :
+                    List<Commentaire> comments = commentaireRepository.findAllByIdart(d.getIdart());
+                    double noteArt = 0;
+                    int totalComment = comments.isEmpty() ? 0 : comments.size();
+                    if(!comments.isEmpty()){
+                        noteArt = comments.stream().mapToInt(Commentaire::getNote).average().orElse(0);
+                    }
                     be.setNote(0);
                     be.setArticlerestant( d.getQuantite() - (articleAchete != null ? articleAchete.size() : 0) );
+                    bl.setNoteart(noteArt);
+                    bl.setTotalcomment(totalComment);
+                    bl.setBeanarticle(be);
+
                     // Add
-                    ret.add(be);
+                    ret.add(bl);
                 }
         );
         return ret;
@@ -549,22 +573,51 @@ public class ApiCallController {
     // Get ARTICLES based on iddet :
     @CrossOrigin("*")
     @PostMapping(value={"/managecustomer"})
-    private Client managecustomer(@RequestBody Client ct){
-        Client clt = clientRepository.findByEmail(ct.getEmail());
-        if(clt == null) clt = new Client();
-        clt.setNom(ct.getNom());
-        clt.setPrenom(ct.getPrenom());
-        clt.setEmail(ct.getEmail());
-        clt.setNumero(ct.getNumero());
-        clt.setCommune(ct.getCommune());
-        clt.setAdresse(ct.getAdresse());
-        clt.setGenre(ct.getGenre());
-        clt.setFcmtoken(ct.getFcmtoken());
-        String heure = new SimpleDateFormat("HH:mm").format(new Date());
-        clt.setPwd(heure.replace(":", ""));
+    private BeanCustomerCreation managecustomer(@RequestBody Client ct){
+
+        // Check if EMAIL is not
+        BeanCustomerCreation rt = null;
+
+        Client clt = null;
+        if(ct.getIdcli() == 0){
+            // new CUSTOMER :
+            clt = clientRepository.findByEmail(ct.getEmail());
+            if(clt != null){
+                // Warn the MAIL exist already :
+                rt = new BeanCustomerCreation();
+                rt.setFlag(0); // Le MAIL existe déjà
+                rt.setClt(ct);
+            }
+            else if(clientRepository.findByNumero(ct.getNumero()) != null){
+                // Warn the NUMBER exist already :
+                rt = new BeanCustomerCreation();
+                rt.setFlag(1); // Le NUMERO existe déjà
+                rt.setClt(ct);
+            }
+        }
+        if(rt == null){
+            // Process :
+            rt = new BeanCustomerCreation();
+            clt = clientRepository.findByIdcli(ct.getIdcli());
+            if(clt == null) clt = new Client();
+            clt.setNom(ct.getNom());
+            clt.setPrenom(ct.getPrenom());
+            clt.setEmail(ct.getEmail());
+            clt.setNumero(ct.getNumero());
+            clt.setCommune(ct.getCommune());
+            clt.setAdresse(ct.getAdresse());
+            clt.setGenre(ct.getGenre());
+            clt.setFcmtoken(ct.getFcmtoken());
+            String heure = new SimpleDateFormat("HH:mm").format(new Date());
+            clt.setPwd(heure.replace(":", ""));
+
+            //
+            rt.setClt( clientRepository.save(clt));
+            rt.setFlag(2);
+        }
 
         //
-        return clientRepository.save(clt);
+        return rt;
     }
 
     @CrossOrigin("*")
@@ -1549,7 +1602,7 @@ public class ApiCallController {
     // Get ARTICLES based on iddet :
     @CrossOrigin("*")
     @PostMapping(value={"/getmobilepromotedarticles"})
-    private List<Beanarticledetail> getmobilepromotedarticles(@RequestBody RequeteBean rn){
+    private List<BeanResumeArticleDetail> getmobilepromotedarticles(@RequestBody RequeteBean rn){
 
         List<Lienpromotion> articlePromoted =
                 lienpromotionRepository.findAllByEtat(1);
@@ -1566,11 +1619,12 @@ public class ApiCallController {
                     articlePromoted.stream().map(Lienpromotion::getIdart).collect(Collectors.toList()));
         }
 
-        List<Beanarticledetail> ret = new ArrayList<>();
+        List<BeanResumeArticleDetail> ret = new ArrayList<>();
         lesArticles.forEach(
                 d -> {
                     // For each ARTICLE, pick the number of those bought :
                     List<Achat> articleAchete = achatRepository.findAllByIdartAndActif(d.getIdart(), 0);
+                    BeanResumeArticleDetail bl = new BeanResumeArticleDetail();
                     Beanarticledetail be = new Beanarticledetail();
                     be.setIddet(d.getIddet());
                     be.setIdart(d.getIdart());
@@ -1581,10 +1635,21 @@ public class ApiCallController {
                     Lienpromotion ln = lienpromotionRepository.findByIdartAndEtat(d.getIdart(), 1);
                     Promotion pn = promotionRepository.findByIdprn(ln != null ? ln.getIdpro() : 0);
                     be.setReduction(pn != null ? pn.getReduction() : 0);
+                    // Set NOTE :
+                    List<Commentaire> comments = commentaireRepository.findAllByIdart(d.getIdart());
+                    double noteArt = 0;
+                    int totalComment = comments.isEmpty() ? 0 : comments.size();
+                    if(!comments.isEmpty()){
+                        noteArt = comments.stream().mapToInt(Commentaire::getNote).average().orElse(0);
+                    }
                     be.setNote(0);
                     be.setArticlerestant( d.getQuantite() - (articleAchete != null ? articleAchete.size() : 0) );
+                    bl.setNoteart(noteArt);
+                    bl.setTotalcomment(totalComment);
+                    bl.setBeanarticle(be);
+
                     // Add
-                    ret.add(be);
+                    ret.add(bl);
                 }
         );
         return ret;

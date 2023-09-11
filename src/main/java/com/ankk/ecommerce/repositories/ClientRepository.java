@@ -9,6 +9,7 @@ public interface ClientRepository extends CrudRepository<Client, Integer> {
 
     List<Client> findAll();
     Client findByEmail(String email);
+    Client findByNumero(String Numero);
     Client findByIdcli(int idcli);
 
 }
