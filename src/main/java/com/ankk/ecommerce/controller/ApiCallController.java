@@ -37,7 +37,8 @@ import java.util.stream.Collectors;
 @Tag(name="ApiGen")
 public class ApiCallController {
 
-    // Attribute :
+    // A T T R I B U T E S :
+    // http://localhost:8080/backendcommerce/swagger-ui/index.html#/
     @PersistenceUnit
     EntityManagerFactory emf;
     @Autowired
@@ -572,6 +573,37 @@ public class ApiCallController {
 
     // Get ARTICLES based on iddet :
     @CrossOrigin("*")
+    @PostMapping(value={"/getarticledetails"})
+    private List<BeanArticlestatusresponse> getarticledetails(@RequestBody BeanArticlestatusrequest data){
+        //System.out.println("On rentre");
+        List<Article> lte = articleRepository.findAllByIdartIn(data.getArticleid());
+        List<BeanArticlestatusresponse> ret = new ArrayList<>();
+        lte.forEach(
+                d -> {
+                    // Set ARTICLE RESTANTS :
+                    BeanArticlestatusresponse be = new BeanArticlestatusresponse();
+                    be.setIdart(d.getIdart());
+                    be.setRestant(d.getQuantite());
+                    // Comments :
+                    List<Commentaire> comments = commentaireRepository.findAllByIdart(d.getIdart());
+                    double noteArt = 0;
+                    int totalComment = comments.isEmpty() ? 0 : comments.size();
+                    if(!comments.isEmpty()){
+                        noteArt = comments.stream().mapToInt(Commentaire::getNote).average().orElse(0);
+                    }
+                    be.setNote(noteArt);
+                    be.setTotalcomment(totalComment);
+                    // Add
+                    ret.add(be);
+                }
+        );
+        //System.out.println("Taille : "+String.valueOf(ret.size()));
+        return ret;
+    }
+
+
+    // Get ARTICLES based on iddet :
+    @CrossOrigin("*")
     @PostMapping(value={"/managecustomer"})
     private BeanCustomerCreation managecustomer(@RequestBody Client ct){
 
@@ -619,6 +651,35 @@ public class ApiCallController {
         //
         return rt;
     }
+
+
+    @CrossOrigin("*")
+    @PostMapping(value={"/authenicatemobilecustomer"})
+    private BeanCustomerAuth authenicatemobilecustomer(@RequestBody BeanAuthentification data){
+
+        // Check
+        BeanCustomerAuth rt = new BeanCustomerAuth();
+        Client ct = clientRepository.findByEmailAndPwd(data.getMail().trim(), data.getPwd().trim());
+        if(ct == null){
+            rt.setFlag(0);
+            rt.setClt(null);
+        }
+        else {
+            rt.setFlag(1);
+            // Update TOKEN :
+            ct.setFcmtoken(data.getFcmtoken());
+            clientRepository.save(ct);
+            rt.setClt(ct);
+        }
+
+        // Pick 'Commune' :
+        rt.setCommune(communeRepository.findAllByOrderByLibelleAsc());
+
+        //
+        return rt;
+    }
+
+
 
     @CrossOrigin("*")
     @GetMapping(value="/enregistrerPartenaire")
