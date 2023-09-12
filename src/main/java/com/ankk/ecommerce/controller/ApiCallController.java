@@ -195,7 +195,7 @@ public class ApiCallController {
             ur = utilisateurRepository.findByEmail(String.valueOf(liste.get(0)[2]));
         }
 
-        Integer[] tabSup = {1};
+        Integer[] tabSup = {1,2};
         Integer[] tabAdm = {2,3};
         List<Profil> retour = ur.getProfil() == 1 ?
                 profilRepository.findAllByIdproIn(Arrays.asList(tabSup)) :
