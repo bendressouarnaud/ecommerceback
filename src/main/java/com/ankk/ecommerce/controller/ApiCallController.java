@@ -1,6 +1,7 @@
 package com.ankk.ecommerce.controller;
 
 import com.ankk.ecommerce.beans.*;
+import com.ankk.ecommerce.mesobjets.TachesService;
 import com.ankk.ecommerce.models.*;
 import com.ankk.ecommerce.repositories.*;
 import com.ankk.ecommerce.securite.JwtUtil;
@@ -84,6 +85,8 @@ public class ApiCallController {
     @Value("${app.firebase-config}")
     private String firebaseConfig;
     FirebaseApp firebaseApp;
+    @Autowired
+    TachesService tachesService;
 
 
     // Methods
@@ -646,6 +649,9 @@ public class ApiCallController {
             //
             rt.setClt( clientRepository.save(clt));
             rt.setFlag(2);
+            // Send Email to user :
+            tachesService.mailCreation("Création de compte", ct.getEmail(),
+                    heure.replace(":", ""));
         }
 
         //

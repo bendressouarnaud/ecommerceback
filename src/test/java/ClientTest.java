@@ -1,15 +1,16 @@
 import com.ankk.ecommerce.models.Client;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
+//@ExtendWith(SpringExtension.class)
 public class ClientTest {
 
     // A t t r i b u t e s :
 
 
-
     // M E T H O D S :
     @Test
-    private void nouveauClient(){
+    public void nouveauClient(){
         // 9
         Client ct = new Client();
         ct.setFcmtoken("");
@@ -22,8 +23,17 @@ public class ClientTest {
         ct.setCommune(1);
         ct.setPwd("1234");
 
-        // Make the call :
+        assertEquals(ct.getPwd(), "1234");
 
+        // Make the call :
+        /*given().
+                contentType(APPLICATION_JSON).
+                body(null).
+                when()
+                .post("/sendMeasurements")
+                .then()
+                .assertThat()
+                .statusCode(204);*/
     }
 
 }
