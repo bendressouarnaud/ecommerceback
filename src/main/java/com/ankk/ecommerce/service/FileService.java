@@ -124,11 +124,13 @@ public class FileService {
 
             case 3:
                 // Detail :
-                Detail dl = new Detail();
-                dl.setIdspr(det.getIdspr());
-                dl.setLibelle(det.getLibelle());
-                dl.setLienweb(lienweb);
-                detailRepository.save(dl);
+                //Detail dl = new Detail();
+                //dl.setIdspr(det.getIdspr());
+                //dl.setLibelle(det.getLibelle());
+                //dl.setLienweb(lienweb);
+                //
+                det.setLienweb(lienweb);
+                detailRepository.save(det);
                 break;
 
             case 4:

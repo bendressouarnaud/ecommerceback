@@ -8,8 +8,10 @@ import com.ankk.ecommerce.securite.JwtUtil;
 import com.ankk.ecommerce.securite.UserDetailsServiceImp;
 import com.ankk.ecommerce.service.FileService;
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.storage.Bucket;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
+import com.google.firebase.cloud.StorageClient;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -838,10 +840,19 @@ public class ApiCallController {
     @PostMapping("/savedetails")
     public Reponse savedetails(@RequestParam("detail") MultipartFile multipartFile,
                                    @RequestParam(name="libelle") String libelle,
-                                   @RequestParam(name="idspr") Integer idspr
+                                   @RequestParam(name="idspr") Integer idspr,
+                                   @RequestParam(name="iddet") Integer iddet
     ) {
+        Detail dl = null;
+        if(iddet > 0){
+            // Delete the previous FILE :
+            Bucket bucket = StorageClient.getInstance().bucket("gestionpanneaux.appspot.com");
+            dl = detailRepository.findByIddet(iddet);
+            boolean result =  bucket.get(dl.getLienweb()).delete();
+        }
+
         // Set DETAIL :
-        Detail dl = new Detail();
+        if(dl == null) dl = new Detail();
         dl.setIdspr(idspr);
         dl.setLibelle(libelle);
 
