@@ -17,10 +17,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
 import javax.servlet.http.HttpServletRequest;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -48,7 +45,15 @@ public class CommandeController {
     @Autowired
     ArticleRepository articleRepository;
     @Autowired
+    ClientRepository clientRepository;
+    @Autowired
     CommandeRepository commandeRepository;
+    @Autowired
+    DetailRepository detailRepository;
+    @Autowired
+    SousproduitRepository sousproduitRepository;
+    @Autowired
+    ProduitRepository produitRepository;
     @Autowired
     Outil outil;
     @Autowired
@@ -64,6 +69,7 @@ public class CommandeController {
     private ResponseBooking sendbooking(@RequestBody Beanarticlerequest data){
         //
         ResponseBooking rn = new ResponseBooking();
+        List<BeanProcessMail> listeMail = new ArrayList<>();
         String dte = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
         String heure = new SimpleDateFormat("HH:mm:ss").format(new Date());
         data.getListe().forEach(
@@ -106,8 +112,31 @@ public class CommandeController {
                 ce.setEmission(0);
                 ce.setLivre(0);
                 commandeRepository.save(ce);
+                
+                // Process for MAIL :
+                Article ale = articleRepository.findByIdart(d.getIdart());
+                BeanProcessMail bl = listeMail.stream().filter(
+                    e -> e.getIdent() == ale.getIdent())
+                        .findFirst().orElse(null);
+                if(bl == null){
+                    bl = new BeanProcessMail();
+                    bl.setIdent(ale.getIdent());
+                }
+
+                // go ahead :
+                if(bl.getIdart().add(d.getIdart())){
+                    // Add 'lienweb'
+                    bl.getLienweb().add(new BeanLibImg(ale.getLibelle(), ale.getLienweb()));
+                }
+
+                // Add :
+                listeMail.add(bl);
             }
         );
+
+        // Send the MAIL :
+        tachesService.notifyCompany(listeMail,
+                clientRepository.findByIdcli(data.getIdcli()));
 
         rn.setEtat(1);
         rn.setDates(dte);
@@ -485,5 +514,4 @@ public class CommandeController {
         rn.setIdprd(1);
         return rn;
     }
-
 }

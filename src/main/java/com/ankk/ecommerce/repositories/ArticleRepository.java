@@ -2,6 +2,7 @@ package com.ankk.ecommerce.repositories;
 
 import com.ankk.ecommerce.beans.Beansousproduitarticle;
 import com.ankk.ecommerce.models.Article;
+import com.ankk.ecommerce.models.Detail;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
@@ -20,6 +21,8 @@ public interface ArticleRepository extends CrudRepository<Article, Integer> {
     Article findByIdart(int id);
     List<Article> findFirst6ByOrderByIdartDesc();
     List<Article> findFirst6ByIdartInOrderByIdartDesc(List<Integer> idart);
+    List<Article> findByLibelleStartsWith(String lib);
+    List<Article> findByLibelleLike(String lib);
 
     /*@Query(value = "select a.idspr,a.libelle as libsousprod,c.idart,c.libelle,c.lienweb,c.prix from " +
             "sousproduit a inner join detail b on a.idspr=b.idspr inner join article c on " +

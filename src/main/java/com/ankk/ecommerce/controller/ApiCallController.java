@@ -111,6 +111,29 @@ public class ApiCallController {
         }
     }
 
+
+    @CrossOrigin("*")
+    @PostMapping(value="/suppraccount")
+    private ResponseEntity<?> suppraccount(
+            @RequestBody UserLog userLog) throws Exception{
+        Client ct = clientRepository.findByEmailAndPwd(
+                userLog.getIdentifiant(), userLog.getMotdepasse());
+        long ret = 0;
+        if(ct != null){
+            // Delete :
+            ret = 1;
+            // Notify MOBILE :
+            tachesService.notifyCustomerForOngoingCommand(ct.getIdcli(),
+                    "4","","");
+        }
+        //
+        Map<String, Object> stringMap = new HashMap<>();
+        if(ret > 0) stringMap.put("operation", "1");
+        else stringMap.put("operation", "0");
+        return ResponseEntity.ok(stringMap);
+    }
+
+
     @CrossOrigin("*")
     @PostMapping(value="/authentification")
     private ResponseEntity<?> authentification(
@@ -1763,6 +1786,114 @@ public class ApiCallController {
                     ret.add(be);
                 }
         );
+        return ret;
+    }
+
+
+    @CrossOrigin("*")
+    @Operation(summary = "Rechercher les éléments saisis par le client")
+    @PostMapping(value="/lookforuserrequest")
+    private List<String> lookforuserrequest(
+            @RequestBody RequestBean data,
+            HttpServletRequest request){
+
+        Set<String> ret = new HashSet<>();
+        List<Produit> lProd = produitRepository.findByLibelleStartsWith(data.getLib());
+        List<Sousproduit> sProd = sousproduitRepository.findByLibelleStartsWith(data.getLib());
+        List<Detail> detail = detailRepository.findByLibelleStartsWith(data.getLib());
+        List<Article> articles = articleRepository.findByLibelleStartsWith(data.getLib());
+
+        if(!lProd.isEmpty()) ret.addAll( lProd.stream().map(Produit::getLibelle).collect(Collectors.toSet()));
+        if(!sProd.isEmpty()) ret.addAll( sProd.stream().map(Sousproduit::getLibelle).collect(Collectors.toSet()));
+        if(!detail.isEmpty()) ret.addAll( detail.stream().map(Detail::getLibelle).collect(Collectors.toSet()));
+        if(!articles.isEmpty()) ret.addAll( articles.stream().map(Article::getLibelle).collect(Collectors.toSet()));
+
+        return new ArrayList<>(ret); // ret.toArray().;
+    }
+
+    @CrossOrigin("*")
+    @Operation(summary = "Rechercher les articles dont les noms contiennent la valeur saisie")
+    @PostMapping(value="/lookforwhatuserrequested")
+    private List<BeanResumeArticleDetail> lookforwhatuserrequested(
+            @RequestBody RequestBean data,
+            HttpServletRequest request){
+
+        //
+        List<BeanResumeArticleDetail> ret = new ArrayList<>();
+        List<Article> lesArt = null;
+
+        // CHECK on PRODUIT
+        List<Produit> lProd = produitRepository.findByLibelle(data.getLib());
+        if(!lProd.isEmpty()){
+            List<Sousproduit> lSProd = sousproduitRepository.findAllByIdprdIn(
+                    lProd.stream().mapToInt(Produit::getIdprd).boxed().
+                            collect(Collectors.toList()));
+            if(!lSProd.isEmpty()){
+                List<Detail> deT = detailRepository.findAllByIdsprIn(
+                        lSProd.stream().mapToInt(Sousproduit::getIdspr).boxed().
+                                collect(Collectors.toList()));
+                // now take article :
+                if(!deT.isEmpty()){
+                    lesArt = articleRepository.findAllByChoixAndIddetIn(1,
+                            deT.stream().map(Detail::getIddet).collect(Collectors.toList()));
+                }
+            }
+        }
+        else if(!sousproduitRepository.findByLibelleOrderByLibelleAsc(data.getLib()).isEmpty()){
+            /*sousproduitRepository.
+                findByLibelleOrderByLibelleAsc(data.getLib()).stream()*/
+            List<Detail> deT = detailRepository.findAllByIdsprIn(
+                    sousproduitRepository.findByLibelleOrderByLibelleAsc(data.getLib()).
+                            stream().mapToInt(Sousproduit::getIdspr).boxed().
+                            collect(Collectors.toList()));
+            // now take article :
+            if(!deT.isEmpty()){
+                lesArt = articleRepository.findAllByChoixAndIddetIn(1,
+                        deT.stream().map(Detail::getIddet).collect(Collectors.toList()));
+            }
+        }
+        else if (!detailRepository.findByLibelle(data.getLib()).isEmpty()) {
+            lesArt = articleRepository.findAllByChoixAndIddetIn(1,
+                    detailRepository.findByLibelle(data.getLib()).
+                            stream().map(Detail::getIddet).collect(Collectors.toList()));
+        }
+        else {
+            lesArt = articleRepository.findByLibelleLike(data.getLib());
+        }
+
+        lesArt.forEach(
+                d -> {
+                    // For each ARTICLE, pick the number of those bought :
+                    List<Achat> articleAchete = achatRepository.findAllByIdartAndActif(d.getIdart(), 0);
+                    BeanResumeArticleDetail bl = new BeanResumeArticleDetail();
+                    Beanarticledetail be = new Beanarticledetail();
+                    be.setIddet(d.getIddet());
+                    be.setIdart(d.getIdart());
+                    be.setLienweb(d.getLienweb());
+                    be.setLibelle(d.getLibelle());
+                    be.setPrix(d.getPrix());
+                    // Find a promotion :
+                    Lienpromotion ln = lienpromotionRepository.findByIdartAndEtat(d.getIdart(), 1);
+                    Promotion pn = promotionRepository.findByIdprn(ln != null ? ln.getIdpro() : 0);
+                    be.setReduction(pn != null ? pn.getReduction() : 0);
+                    // Set NOTE :
+                    List<Commentaire> comments = commentaireRepository.findAllByIdart(d.getIdart());
+                    double noteArt = 0;
+                    int totalComment = comments.isEmpty() ? 0 : comments.size();
+                    if(!comments.isEmpty()){
+                        noteArt = comments.stream().mapToInt(Commentaire::getNote).average().orElse(0);
+                    }
+                    be.setNote(0);
+                    be.setArticlerestant( d.getQuantite() - (articleAchete != null ? articleAchete.size() : 0) );
+                    bl.setNoteart(noteArt);
+                    bl.setTotalcomment(totalComment);
+                    bl.setBeanarticle(be);
+
+                    // Add
+                    ret.add(bl);
+                }
+        );
+
         return ret;
     }
 }

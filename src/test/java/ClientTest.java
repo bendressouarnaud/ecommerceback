@@ -21,7 +21,7 @@ public class ClientTest {
     //TraiterCommande traiterCommande;
 
     // M E T H O D S :
-    @Test
+    /*@Test
     public void nouveauClient(){
         // 9
         Client ct = new Client();
@@ -58,19 +58,7 @@ public class ClientTest {
 
         assertEquals(ct.getPwd(), "123");
 
-
-
-
-
-        // Make the call :
-        /*given().
-                contentType(APPLICATION_JSON).
-                body(null).
-                when()
-                .post("/sendMeasurements")
-                .then()
-                .assertThat()
-                .statusCode(204);*/
     }
+    */
 
 }

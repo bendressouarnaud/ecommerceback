@@ -48,17 +48,18 @@ public class WebSecurityConf extends WebSecurityConfigurerAdapter {
         //
         http.cors().and().csrf().disable()
                 .authorizeRequests().antMatchers(
-                        "/authentification","/getmotifs",
-                        "/authmobileusermac/**",
-                        "/getmobileAllProduits","/getmobileallsousproduits","/getarticlesbasedoniddet",
+                "/authentification","/getmotifs","/suppraccount",
+                "/authmobileusermac/**",
+                "/getmobileAllProduits","/getmobileallsousproduits","/getarticlesbasedoniddet",
                 "/getmobileAllCommunes", "/managecustomer","/sendbooking",
                 "/getmobileallsousproduitsbyidprd","/getmobileallsousproduitsarticles",
                 "/getmobilealldetailsarticles","/getmobilearticlesBasedonLib",
-                        "/getmobilepromotedarticles","/getmobilerecentarticles",
-                        "/sendmobilecomment","/authenicatemobilecustomer","/getarticledetails",
-                        "/getmobilehistoricalcommande","/getcustomercommandearticle",
-                        "/getmobilealldetailsbyidspr","/getmobilearticleinformationbyidart",
-                        "/v3/**","/swagger-ui**","/swagger-ui/**"
+                "/getmobilepromotedarticles","/getmobilerecentarticles","/lookforuserrequest",
+                "/sendmobilecomment","/authenicatemobilecustomer","/getarticledetails",
+                "/getmobilehistoricalcommande","/getcustomercommandearticle",
+                "/getmobilealldetailsbyidspr","/getmobilearticleinformationbyidart",
+                "/lookforwhatuserrequested",
+                "/v3/**","/swagger-ui**","/swagger-ui/**"
                 ).permitAll().anyRequest().authenticated()
                 .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);

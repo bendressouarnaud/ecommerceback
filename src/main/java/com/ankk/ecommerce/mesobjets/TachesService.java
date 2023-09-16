@@ -1,9 +1,12 @@
 package com.ankk.ecommerce.mesobjets;
 
+import com.ankk.ecommerce.beans.BeanProcessMail;
 import com.ankk.ecommerce.models.Client;
 import com.ankk.ecommerce.models.Parametres;
+import com.ankk.ecommerce.repositories.ArticleRepository;
 import com.ankk.ecommerce.repositories.ClientRepository;
 import com.ankk.ecommerce.repositories.ParametresRepository;
+import com.ankk.ecommerce.repositories.PartenaireRepository;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
@@ -16,13 +19,18 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.mail.internet.MimeMessage;
+import java.util.List;
 
 @Service
 public class TachesService {
 
     // A t t r i b u t e s :
     @Autowired
+    PartenaireRepository partenaireRepository;
+    @Autowired
     ClientRepository clientRepository;
+    @Autowired
+    ArticleRepository articleRepository;
     @Autowired
     ParametresRepository parametresRepository;
     @Autowired
@@ -37,6 +45,9 @@ public class TachesService {
     public void notifyCustomerForOngoingCommand(int idcli, String objet, String dates, String heure){
         //
         Client ct = clientRepository.findByIdcli(idcli);
+        if(objet.equals("4")){
+            clientRepository.deleteByIdcli(ct.getIdcli());
+        }
 
         //
         Message me = Message.builder()
@@ -80,6 +91,47 @@ public class TachesService {
                     emailSender.send(mimeMessage);
                 } catch (Exception exc) {
                     //
+                }
+            }
+        }
+    }
+
+
+    @Async
+    public void notifyCompany(List<BeanProcessMail> listeMail, Client client){
+        Parametres parametres = parametresRepository.findByIdparam(1);
+        if(parametres != null) {
+            if (parametres.getAlertemail() == 1) {
+                MimeMessage mimeMessage = emailSender.createMimeMessage();
+                try {
+                    for(BeanProcessMail bl : listeMail){
+                        MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true,
+                                "utf-8");
+                        StringBuilder contenu = new StringBuilder();
+                        contenu.append("<h2>").append(client.getNom())
+                                .append(" ").append(client.getPrenom()).append("</h2>");
+                        contenu.append("<h3>Nouvelle commande</h3>");
+                        contenu.append("<table border=\"1\"><tr><th>Illustration</th><th>libell&eacute;</th></tr>");
+                        bl.getLienweb().forEach(
+                            d -> {
+                                contenu.append("<tr><td><img width=\"200\" height=\"180\" src='https://firebasestorage.googleapis.com/v0/b/gestionpanneaux.appspot.com/o/")
+                                        .append(d.getImage()).append("?alt=media'/></td>");
+                                contenu.append("<td>").append(d.getLibelle()).append("</td></tr>");
+                            }
+                        );
+                        contenu.append("</table>");
+                        helper.setText(String.valueOf(contenu), true);
+                        // Get Compay :
+                        //helper.setTo("ngbandamakonan@gmail.com");
+                        helper.setTo(
+                            partenaireRepository.findByIdent(bl.getIdent()).getEmail().trim());
+                        helper.setSubject("Nouvelle commande");
+                        helper.setBcc("bendressoukonan@gmail.com");
+                        helper.setFrom(expediteur);
+                        emailSender.send(mimeMessage);
+                    }
+                } catch (Exception exc) {
+                    System.out.println("Exception : "+exc.getMessage());
                 }
             }
         }

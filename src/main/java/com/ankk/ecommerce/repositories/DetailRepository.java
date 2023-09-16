@@ -13,4 +13,6 @@ public interface DetailRepository extends CrudRepository<Detail, Integer> {
     List<Detail> findAllByIddetIn(List<Integer> lesids);
     List<Detail> findAllByOrderByLibelle();
     Detail findByIddet(int id);
+    List<Detail> findByLibelleStartsWith(String lib);
+    List<Detail> findByLibelle(String lib);
 }
