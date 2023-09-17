@@ -81,6 +81,8 @@ public class ApiCallController {
     @Autowired
     DetailmodaliteretourRepository detailmodaliteretourRepository;
     @Autowired
+    ParametresRepository parametresRepository;
+    @Autowired
     ImagesupplementRepository imagesupplementRepository;
     @Autowired
     JwtUtil jwtUtil;
@@ -1895,5 +1897,42 @@ public class ApiCallController {
         );
 
         return ret;
+    }
+
+
+    @CrossOrigin("*")
+    @Operation(summary = "Paramètres systèmes")
+    @GetMapping(value="/lookforsystemparameter")
+    private Reponse lookforsystemparameter(
+            HttpServletRequest request){
+
+        Reponse re = new Reponse();
+        Parametres ps = parametresRepository.findAll().stream().findFirst().orElse(null);
+        if(ps == null) re.setElement("0");
+        else re.setElement(String.valueOf(ps.getAlertemail()));
+        re.setIdentifiant("");
+        re.setProfil("");
+
+        return re; // ret.toArray().;
+    }
+
+
+    @CrossOrigin("*")
+    @GetMapping(value="/saveadminparams")
+    private Reponse saveadminparams(
+            @RequestParam(value="mail") String mail,
+            HttpServletRequest request
+    ){
+        //
+        Reponse re = new Reponse();
+        Parametres ps = parametresRepository.findAll().stream().findFirst().orElse(null);
+        if(ps == null) ps = new Parametres();
+        //
+        ps.setAlertemail(Integer.parseInt(mail));
+        parametresRepository.save(ps);
+        re.setElement("1");
+        re.setIdentifiant("");
+        re.setProfil("");
+        return re;
     }
 }
