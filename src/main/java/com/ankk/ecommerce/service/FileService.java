@@ -70,11 +70,7 @@ public class FileService {
     private void uploadFile(File file, String fileName, String libproduit
             , int mode, int idprd, Article art, Detail det) throws IOException {
         BlobId blobId = BlobId.of("gestionpanneaux.appspot.com", (fileName));
-        //BlobId blobId = BlobId.of("gestionpanneaux.appspot.com", ("produits/"+fileName));
         BlobInfo blobInfo = BlobInfo.newBuilder(blobId).setContentType("media").build();
-        /*Credentials credentials = GoogleCredentials.fromStream(
-            new FileInputStream(
-            "./src/main/resources/gestionpanneaux-firebase-adminsdk-q0rzg-0eef98bb76.json"));*/
         Credentials credentials = GoogleCredentials.fromStream(
                 new ClassPathResource(firebaseConfig).getInputStream());
         Storage storage = StorageOptions.newBuilder().setCredentials(credentials).build().getService();
@@ -134,11 +130,18 @@ public class FileService {
                 break;
 
             case 4:
-                // Add it in 'imagesupplement' table :
-                Imagesupplement it = new Imagesupplement();
-                it.setIdart(idprd);
-                it.setLienweb(lienweb);
-                imagesupplementRepository.save(it);
+                if(det != null){
+                    Article arte = articleRepository.findByIdart(idprd);
+                    arte.setLienweb(lienweb);
+                    articleRepository.save(arte);
+                }
+                else {
+                    // Add it in 'imagesupplement' table :
+                    Imagesupplement it = new Imagesupplement();
+                    it.setIdart(idprd);
+                    it.setLienweb(lienweb);
+                    imagesupplementRepository.save(it);
+                }
                 break;
         }
 
