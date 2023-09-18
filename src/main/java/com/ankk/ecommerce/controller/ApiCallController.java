@@ -951,6 +951,7 @@ public class ApiCallController {
         @RequestParam(name="actif") Integer actif,
         @RequestParam(name="idprn") Integer idprn,
         @RequestParam(name="nombrearticle") Integer nombrearticle,
+        @RequestParam(name="authSwap") Integer authSwap,
         HttpServletRequest request
     ) {
 
