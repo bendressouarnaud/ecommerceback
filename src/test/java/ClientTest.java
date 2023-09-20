@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.ArrayList;
@@ -21,7 +22,7 @@ public class ClientTest {
     //TraiterCommande traiterCommande;
 
     // M E T H O D S :
-    /*@Test
+    @Test
     public void nouveauClient(){
         // 9
         Client ct = new Client();
@@ -56,9 +57,8 @@ public class ClientTest {
 
         //verify(traiterCommande).coutCommande(lte);
 
-        assertEquals(ct.getPwd(), "123");
+        assertEquals(ct.getPwd(), "1234");
 
     }
-    */
 
 }
