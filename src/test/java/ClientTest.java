@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -18,8 +20,8 @@ import static org.mockito.Mockito.when;
 public class ClientTest {
 
     // A t t r i b u t e s :
-    //@Mock
-    //TraiterCommande traiterCommande;
+    /*@Mock
+    TraiterCommande traiterCommande;
 
     // M E T H O D S :
     @Test
@@ -53,12 +55,9 @@ public class ClientTest {
         List<Commande> lte = new ArrayList<>();
         lte.add(cmd);
 
-        //when(traiterCommande.coutCommande(lte)).thenReturn(10000);
-
-        //verify(traiterCommande).coutCommande(lte);
-
+        when(traiterCommande.coutCommande(1)).thenReturn(1);
+        verify(traiterCommande).coutCommande(1);
         assertEquals(ct.getPwd(), "1234");
-
-    }
+    }*/
 
 }

@@ -80,7 +80,8 @@ public class FileService {
         switch (mode){
             case 0:
                 // Produit
-                Produit pt = new Produit();
+                Produit pt = produitRepository.findByIdprd(idprd);
+                if(pt == null) pt = new Produit();
                 pt.setLibelle(libproduit);
                 pt.setLienweb(lienweb);
                 produitRepository.save(pt);
@@ -88,7 +89,11 @@ public class FileService {
 
             case 1:
                 // Sous-Produit
-                Sousproduit st = new Sousproduit();
+                Sousproduit st = null;
+                if(det != null){
+                    st = sousproduitRepository.findByIdspr(det.getIdspr());
+                }
+                if(st == null) st = new Sousproduit();
                 st.setLibelle(libproduit);
                 st.setLienweb(lienweb);
                 st.setIdprd(idprd);

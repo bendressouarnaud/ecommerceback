@@ -835,9 +835,16 @@ public class ApiCallController {
     @CrossOrigin("*")
     @PostMapping("/savepoducts")
     public Reponse savepoducts(@RequestParam("produit") MultipartFile multipartFile,
-                          @RequestParam(name="libelle") String libelle) {
-        //System.out.println("Libelle : "+libelle);
-        fileService.upload(multipartFile, libelle, 0, 0, null, null);
+                          @RequestParam(name="libelle") String libelle,
+                          @RequestParam(name="idprd") Integer idprd) {
+
+        if(idprd > 0){
+            // Delete the previous FILE :
+            Bucket bucket = StorageClient.getInstance().bucket("gestionpanneaux.appspot.com");
+            bucket.get(produitRepository.findByIdprd(idprd).getLienweb()).delete();
+        }
+
+        fileService.upload(multipartFile, libelle, 0, idprd, null, null);
         Reponse re = new Reponse();
         re.setElement("OK");
         re.setIdentifiant("OK");
@@ -849,10 +856,22 @@ public class ApiCallController {
     @PostMapping("/savesouspoducts")
     public Reponse savesouspoducts(@RequestParam("produit") MultipartFile multipartFile,
                           @RequestParam(name="libelle") String libelle,
+                          @RequestParam(name="idspr") Integer idspr,
                           @RequestParam(name="idprd") Integer idprd
     ) {
-        //System.out.println("Libelle : "+libelle);
-        fileService.upload(multipartFile, libelle, 1, idprd, null, null);
+        // Use Detail to keep 'idspr' :
+        Detail dl = null;
+
+        if(idspr > 0){
+            // Delete the previous FILE :
+            Bucket bucket = StorageClient.getInstance().bucket("gestionpanneaux.appspot.com");
+            bucket.get(sousproduitRepository.findByIdspr(idspr).getLienweb()).delete();
+
+            dl = new Detail();
+            dl.setIdspr(idspr);
+        }
+
+        fileService.upload(multipartFile, libelle, 1, idprd, null, dl);
         Reponse re = new Reponse();
         re.setElement("OK");
         re.setIdentifiant("OK");
