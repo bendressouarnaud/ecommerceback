@@ -1358,7 +1358,7 @@ public class ApiCallController {
     private Beanarticledatahistory getmobilearticleinformationbyidart(
             @RequestBody RequeteBeanArticle rn){
         // Get images :
-        List<Imagesupplement> imagesSup = imagesupplementRepository.findAllByIdart(rn.getIdart());
+        List<Imagesupplement> imagesSup = new ArrayList<>();
         // Get Comments :
         List<Commentaire> comments = commentaireRepository.findAllByIdart(rn.getIdart());
         List<BeanCommentaireContenu> lescomments = new ArrayList<>();
@@ -1377,6 +1377,19 @@ public class ApiCallController {
 
         // Get Article :
         Article ale = articleRepository.findByIdart(rn.getIdart());
+        // Get idprd :
+        int idprd = sousproduitRepository.findByIdspr(
+                detailRepository.findByIddet(ale.getIddet()).getIdspr()).getIdprd();
+        if(idprd == 4){
+            // Pick on supplement for CLOTHES :
+            imagesSup = imagesupplementRepository.findAllByIdart(rn.getIdart());
+        }
+        else{
+            // Add origin image
+            imagesSup.add(new Imagesupplement(0L, ale.getLienweb(), ale.getIdart()));
+            // Add the rest :
+            imagesSup.addAll(imagesupplementRepository.findAllByIdart(rn.getIdart()));
+        }
         Beanarticledatahistory by = new Beanarticledatahistory();
         by.setArticle(ale.getLibelle());
         Partenaire pe = partenaireRepository.findByIdent(ale.getIdent());
@@ -1398,9 +1411,6 @@ public class ApiCallController {
         by.setReduction(pn != null ? pn.getReduction() : 0);
         by.setNombrearticle( ale.getQuantite() );
         //by.setNombrearticle(ale.getQuantite());
-        // Add origin image
-        if(imagesSup == null) imagesSup = new ArrayList<>();
-        imagesSup.add(new Imagesupplement(0L, ale.getLienweb(), ale.getIdart()));
         //
         by.setImages(imagesSup);
         by.setComments(lescomments);
@@ -1413,6 +1423,7 @@ public class ApiCallController {
         Commentaire cte = commentaireRepository.findAllByIdartAndIdcli(
                 rn.getIdart(), rn.getIduser()).stream().findFirst().orElse(null);
         by.setCommentaireexiste(cte != null ? 1 : 0);
+        by.setTrackVetement(idprd);
         return by;
     }
 

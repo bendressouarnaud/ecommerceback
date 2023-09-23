@@ -14,4 +14,5 @@ public class Beanarticledatahistory {
     String article, entreprise, modaliteretour, descriptionproduit, contact;
     int prix, reduction, nombrearticle, autorisecommentaire, commentaireexiste;
     int iddet, note;
+    int trackVetement;
 }
