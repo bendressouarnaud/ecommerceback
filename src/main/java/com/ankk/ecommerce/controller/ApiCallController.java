@@ -390,21 +390,21 @@ public class ApiCallController {
                                     d -> {
                                         // Get related ARTICLE :
                                         List<Article> ltArticle = lteArticle.stream().
-                                                filter( a -> d.getIddet() == a.getIddet()).
-                                                collect(Collectors.toList());
+                                                filter( a -> d.getIddet() == a.getIddet())
+                                                .collect(Collectors.toList());
                                         if(!ltArticle.isEmpty()){
                                             //
                                             Beansousproduitarticle be = new Beansousproduitarticle();
                                             be.setDetail(s.getLibelle());
-                                            ltArticle.forEach(
-                                                    l -> {
-                                                        Beanresumearticle br = new Beanresumearticle();
-                                                        br.setIdart(l.getIdart());
-                                                        br.setLienweb(l.getLienweb());
-                                                        br.setLibelle(l.getLibelle());
-                                                        br.setPrix(l.getPrix());
-                                                        be.getListe().add(br);
-                                                    }
+                                            ltArticle.subList(0, Math.min(ltArticle.size(), 6)).forEach(
+                                                l -> {
+                                                    Beanresumearticle br = new Beanresumearticle();
+                                                    br.setIdart(l.getIdart());
+                                                    br.setLienweb(l.getLienweb());
+                                                    br.setLibelle(l.getLibelle());
+                                                    br.setPrix(l.getPrix());
+                                                    be.getListe().add(br);
+                                                }
                                             );
 
                                             // Check :
@@ -464,7 +464,7 @@ public class ApiCallController {
                                 Beansousproduitarticle be = new Beansousproduitarticle();
                                 be.setDetail(s.getLibelle());
                                 be.setIddet(s.getIddet());
-                                ltArticle.forEach(
+                                ltArticle.subList(0, Math.min(ltArticle.size(), 6)).forEach(
                                         l -> {
                                             Beanresumearticle br = new Beanresumearticle();
                                             br.setIdart(l.getIdart());
@@ -1842,11 +1842,15 @@ public class ApiCallController {
             HttpServletRequest request){
 
         Set<String> ret = new HashSet<>();
+
+        // Look for COMPANY NAME too :
+        List<Partenaire> lPart = partenaireRepository.findByLibelleStartsWith(data.getLib());
         List<Produit> lProd = produitRepository.findByLibelleStartsWith(data.getLib());
         List<Sousproduit> sProd = sousproduitRepository.findByLibelleStartsWith(data.getLib());
         List<Detail> detail = detailRepository.findByLibelleStartsWith(data.getLib());
         List<Article> articles = articleRepository.findByLibelleStartsWith(data.getLib());
 
+        if(!lPart.isEmpty()) ret.addAll( lPart.stream().map(Partenaire::getLibelle).collect(Collectors.toSet()));
         if(!lProd.isEmpty()) ret.addAll( lProd.stream().map(Produit::getLibelle).collect(Collectors.toSet()));
         if(!sProd.isEmpty()) ret.addAll( sProd.stream().map(Sousproduit::getLibelle).collect(Collectors.toSet()));
         if(!detail.isEmpty()) ret.addAll( detail.stream().map(Detail::getLibelle).collect(Collectors.toSet()));
@@ -1866,12 +1870,18 @@ public class ApiCallController {
         List<BeanResumeArticleDetail> ret = new ArrayList<>();
         List<Article> lesArt = null;
 
-        // CHECK on PRODUIT
-        List<Produit> lProd = produitRepository.findByLibelle(data.getLib());
-        if(!lProd.isEmpty()){
+        List<Partenaire> lPart = partenaireRepository.findAllByLibelle(data.getLib());
+        if(!lPart.isEmpty()){
+            lesArt = articleRepository.findAllByChoixAndIddetIn(1,
+                    lPart.stream().mapToInt(Partenaire::getIdent)
+                            .boxed().collect(Collectors.toList())
+                    );
+        }
+        else if(!produitRepository.findByLibelle(data.getLib()).isEmpty()){
             List<Sousproduit> lSProd = sousproduitRepository.findAllByIdprdIn(
-                    lProd.stream().mapToInt(Produit::getIdprd).boxed().
-                            collect(Collectors.toList()));
+                produitRepository.findByLibelle(data.getLib())
+                .stream().mapToInt(Produit::getIdprd).boxed()
+                .collect(Collectors.toList()));
             if(!lSProd.isEmpty()){
                 List<Detail> deT = detailRepository.findAllByIdsprIn(
                         lSProd.stream().mapToInt(Sousproduit::getIdspr).boxed().
@@ -1937,7 +1947,6 @@ public class ApiCallController {
                     ret.add(bl);
                 }
         );
-
         return ret;
     }
 

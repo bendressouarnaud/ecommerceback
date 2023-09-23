@@ -7,6 +7,8 @@ import java.util.List;
 
 public interface PartenaireRepository extends CrudRepository<Partenaire, Integer> {
     List<Partenaire> findAllByOrderByLibelleAsc();
+    List<Partenaire> findAllByLibelle(String lib);
     Partenaire findByIdent(int id);
     Partenaire findByContact(String contact);
+    List<Partenaire> findByLibelleStartsWith(String lib);
 }
