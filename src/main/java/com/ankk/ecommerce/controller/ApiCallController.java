@@ -1872,7 +1872,7 @@ public class ApiCallController {
 
         List<Partenaire> lPart = partenaireRepository.findAllByLibelle(data.getLib());
         if(!lPart.isEmpty()){
-            lesArt = articleRepository.findAllByChoixAndIddetIn(1,
+            lesArt = articleRepository.findAllByChoixAndIdentIn(1,
                     lPart.stream().mapToInt(Partenaire::getIdent)
                             .boxed().collect(Collectors.toList())
                     );
