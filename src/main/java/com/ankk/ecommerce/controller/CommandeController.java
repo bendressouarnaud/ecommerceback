@@ -169,6 +169,9 @@ public class CommandeController {
             @RequestParam(value="dates") String dates,
             @RequestParam(value="heure") String heure,
             HttpServletRequest request){
+
+        Utilisateur ur = outil.getCompanyUser(request);
+
         Date dte = null;
         try {
             dte = new SimpleDateFormat("yyyy-MM-dd").
@@ -178,12 +181,10 @@ public class CommandeController {
         }
 
         List<Commande> listeCom = commandeRepository.findAllByIduserAndDatesAndHeure(idcli, dte, heure);
-        /*IntStream li = listeCom.stream().mapToInt(Commande::getIdart).distinct();
-        Date finalDte = dte;*/
         List<BeanArticleCommande> ret = new ArrayList<>();
 
         // Process :
-        listeCom.forEach(
+        listeCom.stream().filter(c -> (ur.getIdent() == articleRepository.findByIdart(c.getIdart()).getIdent())).forEach(
             d -> {
                 // Idart :
                 Article ale = articleRepository.findByIdart(d.getIdart());
@@ -220,11 +221,15 @@ public class CommandeController {
         catch (Exception exc){
         }
 
+        // Get connected USER :
+        Utilisateur ur = outil.getCompanyUser(request);
+
         List<Commande> listeCom = commandeRepository.findAllByIduserAndDatesAndHeure(idcli, dte, heure);
         List<BeanArticleCommande> ret = new ArrayList<>();
 
         // Process :
-        listeCom.stream().filter(c -> (c.getTraite() ==1 && c.getDisponible() > 0)).forEach(
+        listeCom.stream().filter(c -> (c.getTraite() ==1 && c.getDisponible() > 0 &&
+                (ur.getIdent() == articleRepository.findByIdart(c.getIdart()).getIdent()))).forEach(
                 d -> {
                     // Idart :
                     Article ale = articleRepository.findByIdart(d.getIdart());
@@ -254,6 +259,9 @@ public class CommandeController {
             @RequestParam(value="dates") String dates,
             @RequestParam(value="heure") String heure,
             HttpServletRequest request){
+
+        Utilisateur ur = outil.getCompanyUser(request);
+
         Date dte = null;
         try {
             dte = new SimpleDateFormat("yyyy-MM-dd").parse(dates);
@@ -266,7 +274,7 @@ public class CommandeController {
 
         List<Commande> listeCom = commandeRepository.findAllByIduserAndDatesAndHeure(idcli, dte, heure);
         // Only COMMANDE for which 'TRAITE' = 1
-        listeCom.forEach(
+        listeCom.stream().filter(c -> ur.getIdent() == articleRepository.findByIdart(c.getIdart()).getIdent()).forEach(
             d -> {
                 Commande ce = commandeRepository.findByIdcde(d.getIdcde());
                 ce.setEmission(1);
@@ -314,6 +322,9 @@ public class CommandeController {
             @RequestParam(value="dates") String dates,
             @RequestParam(value="heure") String heure,
             HttpServletRequest request){
+
+        Utilisateur ur = outil.getCompanyUser(request);
+
         Date dte = null;
         try {
             dte = new SimpleDateFormat("yyyy-MM-dd").parse(dates);
@@ -326,7 +337,7 @@ public class CommandeController {
 
         List<Commande> listeCom = commandeRepository.findAllByIduserAndDatesAndHeure(idcli, dte, heure);
         // Only COMMANDE for which 'TRAITE' = 1
-        listeCom.forEach(
+        listeCom.stream().filter(c -> (ur.getIdent() == articleRepository.findByIdart(c.getIdart()).getIdent())).forEach(
             d -> {
                 Commande ce = commandeRepository.findByIdcde(d.getIdcde());
                 ce.setLivre(1);
