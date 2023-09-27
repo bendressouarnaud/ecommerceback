@@ -971,6 +971,8 @@ public class ApiCallController {
         @RequestParam(name="idprn") Integer idprn,
         @RequestParam(name="nombrearticle") Integer nombrearticle,
         @RequestParam(name="authSwap") Integer authSwap,
+        @RequestParam(name="libelle") String libelle,
+        @RequestParam(name="prix") Integer prix,
         HttpServletRequest request
     ) {
 
@@ -1010,18 +1012,19 @@ public class ApiCallController {
         }
 
         // Refresh article 'quantite' if needed :
-        Article ale = null;
+        Article ale = articleRepository.findByIdart(idart);
+        // Update the name :
+        ale.setLibelle(libelle.trim());
+        ale.setPrix(prix);
         if(nombrearticle > 0){
-            ale = articleRepository.findByIdart(idart);
             ale.setQuantite(nombrearticle);
-            articleRepository.save(ale);
         }
+        // Persist :
+        articleRepository.save(ale);
 
         if (imgArticle != null) {
-
             String heure = new SimpleDateFormat("HH:mm:ss").format(new Date());
             if(authSwap > 0){
-                if(ale==null) ale = articleRepository.findByIdart(idart);
                 // Delete the previous FILE :
                 Bucket bucket = StorageClient.getInstance().bucket("gestionpanneaux.appspot.com");
                 boolean result =  bucket.get(ale.getLienweb()).delete();
