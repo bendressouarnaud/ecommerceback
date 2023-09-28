@@ -5,8 +5,7 @@ import java.util.List;
 public class TraiterCommande {
 
 
-    public Integer coutCommande(int lte){
-        //return lte.stream().mapToInt(Commande::getPrix).sum();
-        return lte;
+    public Integer prixTotalCommande(List<Commande> lte){
+        return lte.stream().mapToInt(Commande::getPrix).sum();
     }
 }
