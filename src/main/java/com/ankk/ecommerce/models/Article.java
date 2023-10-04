@@ -40,4 +40,7 @@ public class Article {
 
     @Column(name = "choix")
     private Integer choix;
+
+    @Column(name = "taille")
+    private Integer taille;
 }

@@ -973,6 +973,7 @@ public class ApiCallController {
         @RequestParam(name="authSwap") Integer authSwap,
         @RequestParam(name="libelle") String libelle,
         @RequestParam(name="prix") Integer prix,
+        @RequestParam(name="taille") Integer taille,
         HttpServletRequest request
     ) {
 
@@ -1016,6 +1017,7 @@ public class ApiCallController {
         // Update the name :
         ale.setLibelle(libelle.trim());
         ale.setPrix(prix);
+        ale.setTaille(taille);
         if(nombrearticle > 0){
             ale.setQuantite(nombrearticle);
         }
@@ -1427,6 +1429,7 @@ public class ApiCallController {
                 rn.getIdart(), rn.getIduser()).stream().findFirst().orElse(null);
         by.setCommentaireexiste(cte != null ? 1 : 0);
         by.setTrackVetement(idprd);
+        by.setTaille(ale.getTaille());
         return by;
     }
 
@@ -1741,6 +1744,7 @@ public class ApiCallController {
         Article ar = articleRepository.findByIdart(idart);
         bp.setQuantite(ar.getQuantite());
         bp.setActif(ar.getChoix());
+        bp.setTaille(ar.getTaille());
 
         //
         return bp;

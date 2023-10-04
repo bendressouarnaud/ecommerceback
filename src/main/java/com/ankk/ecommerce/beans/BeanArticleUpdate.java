@@ -6,6 +6,6 @@ import java.util.List;
 
 @Data
 public class BeanArticleUpdate {
-    int quantite, actif;
+    int quantite, actif, taille;
     List<Beanpromotion> promotion;
 }
