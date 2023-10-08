@@ -111,6 +111,7 @@ public class FileService {
                 ar.setLienweb(lienweb);
                 ar.setQuantite(0);
                 ar.setChoix(1);
+                ar.setTaille(0);
                 // Set date :
                 try{
                     String dte = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
