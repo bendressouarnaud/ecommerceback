@@ -1850,12 +1850,12 @@ public class ApiCallController {
 
         Set<String> ret = new HashSet<>();
 
-        // Look for COMPANY NAME too :
-        List<Partenaire> lPart = partenaireRepository.findByLibelleStartsWith(data.getLib());
-        List<Produit> lProd = produitRepository.findByLibelleStartsWith(data.getLib());
-        List<Sousproduit> sProd = sousproduitRepository.findByLibelleStartsWith(data.getLib());
-        List<Detail> detail = detailRepository.findByLibelleStartsWith(data.getLib());
-        List<Article> articles = articleRepository.findByLibelleStartsWith(data.getLib());
+        // Look for COMPANY NAME too :  findByLibelleStartsWith
+        List<Partenaire> lPart = partenaireRepository.findByLibelleIsContaining(data.getLib());
+        List<Produit> lProd = produitRepository.findByLibelleIsContaining(data.getLib());
+        List<Sousproduit> sProd = sousproduitRepository.findByLibelleIsContaining(data.getLib());
+        List<Detail> detail = detailRepository.findByLibelleIsContaining(data.getLib());
+        List<Article> articles = articleRepository.findByLibelleIsContaining(data.getLib());
 
         if(!lPart.isEmpty()) ret.addAll( lPart.stream().map(Partenaire::getLibelle).collect(Collectors.toSet()));
         if(!lProd.isEmpty()) ret.addAll( lProd.stream().map(Produit::getLibelle).collect(Collectors.toSet()));

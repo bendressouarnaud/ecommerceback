@@ -11,4 +11,5 @@ public interface PartenaireRepository extends CrudRepository<Partenaire, Integer
     Partenaire findByIdent(int id);
     Partenaire findByContact(String contact);
     List<Partenaire> findByLibelleStartsWith(String lib);
+    List<Partenaire> findByLibelleIsContaining(String lib);
 }

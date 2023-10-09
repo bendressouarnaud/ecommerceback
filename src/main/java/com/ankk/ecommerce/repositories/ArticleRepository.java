@@ -23,6 +23,7 @@ public interface ArticleRepository extends CrudRepository<Article, Integer> {
     List<Article> findFirst6ByOrderByIdartDesc();
     List<Article> findFirst6ByIdartInOrderByIdartDesc(List<Integer> idart);
     List<Article> findByLibelleStartsWith(String lib);
+    List<Article> findByLibelleIsContaining(String lib);
     List<Article> findByLibelleLike(String lib);
 
     /*@Query(value = "select a.idspr,a.libelle as libsousprod,c.idart,c.libelle,c.lienweb,c.prix from " +
