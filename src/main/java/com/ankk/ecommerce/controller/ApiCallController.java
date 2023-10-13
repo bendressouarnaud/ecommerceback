@@ -1825,7 +1825,10 @@ public class ApiCallController {
                     be.setIddet(d.getIddet());
                     be.setIdart(d.getIdart());
                     be.setLienweb(d.getLienweb());
-                    be.setLibelle(d.getLibelle());
+                    // Process on the LIB :
+                    String tp = d.getLibelle().toLowerCase().length() > 20 ? d.getLibelle().substring(0,17)+" ..." :
+                            d.getLibelle();
+                    be.setLibelle(tp);
                     be.setPrix(d.getPrix());
                     // Find a promotion :
                     Lienpromotion ln = lienpromotionRepository.findByIdartAndEtat(d.getIdart(), 1);
