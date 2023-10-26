@@ -632,6 +632,44 @@ public class ApiCallController {
     }
 
 
+
+    @CrossOrigin("*")
+    @PostMapping(value={"/getarticledetailspanier"})
+    private List<Beanreponsepanier> getarticledetailspanier(@RequestBody BeanArticlestatusrequest data){
+        //System.out.println("On rentre");
+        List<Article> lte = articleRepository.findAllByIdartIn(data.getArticleid());
+        List<Beanreponsepanier> ret = new ArrayList<>();
+        lte.forEach(
+            d -> {
+                // Set ARTICLE RESTANTS :
+                Beanreponsepanier be = new Beanreponsepanier();
+                be.setLienweb(d.getLienweb());
+                be.setLibelle(d.getLibelle());
+                be.setPrix(d.getPrix());
+                // Find a promotion :
+                Lienpromotion ln = lienpromotionRepository.findByIdartAndEtat(d.getIdart(), 1);
+                Promotion pn = promotionRepository.findByIdprn(ln != null ? ln.getIdpro() : 0);
+                be.setReduction(pn != null ? pn.getReduction() : 0);
+                be.setIdart(d.getIdart());
+                be.setRestant(d.getQuantite());
+                // Comments :
+                List<Commentaire> comments = commentaireRepository.findAllByIdart(d.getIdart());
+                double noteArt = 0;
+                int totalComment = comments.isEmpty() ? 0 : comments.size();
+                if(!comments.isEmpty()){
+                    noteArt = comments.stream().mapToInt(Commentaire::getNote).average().orElse(0);
+                }
+                be.setNote(noteArt);
+                be.setTotalcomment(totalComment);
+                // Add
+                ret.add(be);
+            }
+        );
+        return ret;
+    }
+
+
+
     // Get ARTICLES based on iddet :
     @CrossOrigin("*")
     @PostMapping(value={"/managecustomer"})
