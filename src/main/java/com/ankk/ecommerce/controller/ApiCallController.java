@@ -733,7 +733,18 @@ public class ApiCallController {
         Client ct = clientRepository.findByEmailAndPwd(data.getMail().trim(), data.getPwd().trim());
         if(ct == null){
             rt.setFlag(0);
-            rt.setClt(null);
+            ct = new Client();
+            ct.setIdcli(0);
+            ct.setCommune(0);
+            ct.setGenre(0);
+            ct.setNom("");
+            ct.setPrenom("");
+            ct.setEmail("");
+            ct.setNumero("");
+            ct.setAdresse("");
+            ct.setFcmtoken("");
+            ct.setPwd("");
+            rt.setClt(ct);
         }
         else {
             rt.setFlag(1);
@@ -746,7 +757,6 @@ public class ApiCallController {
         // Pick 'Commune' :
         rt.setCommune(communeRepository.findAllByOrderByLibelleAsc());
 
-        //
         return rt;
     }
 
