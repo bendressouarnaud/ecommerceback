@@ -3,10 +3,8 @@ package com.ankk.ecommerce.mesobjets;
 import com.ankk.ecommerce.beans.BeanProcessMail;
 import com.ankk.ecommerce.models.Client;
 import com.ankk.ecommerce.models.Parametres;
-import com.ankk.ecommerce.repositories.ArticleRepository;
-import com.ankk.ecommerce.repositories.ClientRepository;
-import com.ankk.ecommerce.repositories.ParametresRepository;
-import com.ankk.ecommerce.repositories.PartenaireRepository;
+import com.ankk.ecommerce.models.Utilisateur;
+import com.ankk.ecommerce.repositories.*;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
@@ -20,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import javax.mail.internet.MimeMessage;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class TachesService {
@@ -31,6 +30,8 @@ public class TachesService {
     ClientRepository clientRepository;
     @Autowired
     ArticleRepository articleRepository;
+    @Autowired
+    UtilisateurRepository utilisateurRepository;
     @Autowired
     ParametresRepository parametresRepository;
     @Autowired
@@ -125,6 +126,15 @@ public class TachesService {
                         //helper.setTo("ngbandamakonan@gmail.com");
                         helper.setTo(
                             partenaireRepository.findByIdent(bl.getIdent()).getEmail().trim());
+                        // Look for other employees '
+                        List<Utilisateur> collegues =
+                                utilisateurRepository.findAllByProfilOrderByNomAsc(3);
+                        if(!collegues.isEmpty()){
+                            helper.setCc(
+                                collegues.stream().map(Utilisateur::getEmail).collect(Collectors.toList())
+                                .toArray(new String[0])
+                            );
+                        }
                         helper.setSubject("Nouvelle commande");
                         helper.setBcc("bendressoukonan@gmail.com");
                         helper.setFrom(expediteur);

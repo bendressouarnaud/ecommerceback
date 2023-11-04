@@ -1433,7 +1433,7 @@ public class ApiCallController {
         // Get idprd :
         int idprd = sousproduitRepository.findByIdspr(
                 detailRepository.findByIddet(ale.getIddet()).getIdspr()).getIdprd();
-        if(idprd == 4){
+        if((idprd == 4) && (ale.getTaille()==0)){
             // Pick on supplement for CLOTHES :
             imagesSup = imagesupplementRepository.findAllByIdart(rn.getIdart());
         }
