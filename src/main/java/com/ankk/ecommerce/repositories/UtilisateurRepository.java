@@ -13,6 +13,7 @@ public interface UtilisateurRepository extends CrudRepository<Utilisateur, Integ
     Utilisateur findByEmail(String email);
     Utilisateur findByIdentifiantAndMotdepasse(String id, String pwd);
     List<Utilisateur> findAllByProfilOrderByNomAsc(int profil);
+    List<Utilisateur> findAllByProfilAndIdentOrderByNomAsc(int profil, int ident);
     List<Utilisateur> findAllByProfilNotAndIdentOrderByNomAsc(int profil, int id);
     List<Utilisateur> findAllByOrderByNomAsc();
     //List<Utilisateur> findAllByIdmaiOrderByNomAsc(int idmai);

@@ -111,6 +111,7 @@ public class TachesService {
                         StringBuilder contenu = new StringBuilder();
                         contenu.append("<h2>").append(client.getNom())
                                 .append(" ").append(client.getPrenom()).append("</h2>");
+                        contenu.append("<h4>Cliquez sur ce lien pour acc&eacute;der à l'interface : <a href='https://ankkapp.com/gouabo'>Acc&egrave;s application</a></h4>");
                         contenu.append("<h3>Nouvelle commande</h3>");
                         contenu.append("<table border=\"1\"><tr><th>Illustration</th><th>libell&eacute;</th></tr>");
                         bl.getLienweb().forEach(
@@ -128,7 +129,8 @@ public class TachesService {
                             partenaireRepository.findByIdent(bl.getIdent()).getEmail().trim());
                         // Look for other employees '
                         List<Utilisateur> collegues =
-                                utilisateurRepository.findAllByProfilOrderByNomAsc(3);
+                            utilisateurRepository
+                            .findAllByProfilAndIdentOrderByNomAsc(3, bl.getIdent());
                         if(!collegues.isEmpty()){
                             helper.setCc(
                                 collegues.stream().map(Utilisateur::getEmail).collect(Collectors.toList())
