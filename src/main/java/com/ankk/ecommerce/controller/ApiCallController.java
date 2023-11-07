@@ -707,7 +707,9 @@ public class ApiCallController {
             clt.setCommune(ct.getCommune());
             clt.setAdresse(ct.getAdresse());
             clt.setGenre(ct.getGenre());
-            clt.setFcmtoken(ct.getFcmtoken());
+            if(ct.getIdcli() == 0) {
+                clt.setFcmtoken(ct.getFcmtoken());
+            }
             String heure = new SimpleDateFormat("HH:mm").format(new Date());
             clt.setPwd(heure.replace(":", ""));
 
