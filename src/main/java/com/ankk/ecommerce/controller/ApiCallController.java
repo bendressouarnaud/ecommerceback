@@ -49,6 +49,8 @@ public class ApiCallController {
     @Autowired
     ProfilRepository profilRepository;
     @Autowired
+    GrossisteRepository grossisteRepository;
+    @Autowired
     PartenaireRepository partenaireRepository;
     @Autowired
     FileService fileService;
@@ -236,6 +238,12 @@ public class ApiCallController {
         return partenaireRepository.findAllByOrderByLibelleAsc();
     }
 
+    // Because 'Partenaire' and 'Grossiste' share almost the same type of information, we can use below
+    @CrossOrigin("*")
+    @GetMapping(value="/getAllGrossiste")
+    private List<Grossiste> getAllGrossiste(){
+        return grossisteRepository.findAllByOrderByDenominationAsc();
+    }
 
     @CrossOrigin("*")
     @GetMapping(value={"/getAllDetails","/getmobileAllDetails"})
@@ -789,6 +797,34 @@ public class ApiCallController {
         return rse;
     }
 
+    @CrossOrigin("*")
+    @GetMapping(value="/enregistrerGrossiste")
+    private Reponse enregistrerGrossiste(
+            @RequestParam(value="id") Long ident,
+            @RequestParam(value="denomination") String denomination,
+            @RequestParam(value="contact") String contact,
+            @RequestParam(value="email") String email
+    ){
+        Reponse rse = new Reponse();
+        Grossiste ge = grossisteRepository.findByIdgro(ident);
+        if(ge == null){
+            ge = new Grossiste();
+            // Create the CODE :
+            String tpDenom = denomination.substring(0,3);
+            String dte = new SimpleDateFormat("yyyyMMdd").format(new Date());
+            ge.setCode(tpDenom+dte);
+        }
+        ge.setDenomination(denomination.trim());
+        ge.setContact(contact);
+        ge.setEmail(email);
+        grossisteRepository.save(ge);
+
+        rse.setElement("ok");
+        rse.setProfil("ok");
+        rse.setIdentifiant("ok");
+
+        return rse;
+    }
 
     @CrossOrigin("*")
     @GetMapping(value="/enregistrerAdminUser")
