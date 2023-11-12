@@ -45,21 +45,75 @@ public class TachesService {
     @Async
     public void notifyCustomerForOngoingCommand(int idcli, String objet, String dates, String heure){
         //
-        Client ct = clientRepository.findByIdcli(idcli);
-        if(objet.equals("4")){
-            clientRepository.deleteByIdcli(ct.getIdcli());
-        }
-
-        //
-        Message me = Message.builder()
-                //.setTopic("/topics/"+mie.getCode())
-                .setToken(ct.getFcmtoken())
-                .putData("objet", objet)  // COMMANDE en cours de traiement
-                .putData("dates", dates)
-                .putData("heure", heure)
-                .build();
         try {
-            FirebaseMessaging.getInstance().send(me);
+
+            //
+            boolean sendFcm = false;
+
+            Client ct = clientRepository.findByIdcli(idcli);
+            if(objet.equals("4")){
+                clientRepository.deleteByIdcli(ct.getIdcli());
+                // Cancel MAIL sending by forcing 'sendFcm' to true :
+                sendFcm = true;
+            }
+
+            // Check on FCMTOKEN :
+            if(ct.getFcmtoken() != null){
+                if(!ct.getFcmtoken().isEmpty()){
+                    //
+                    Message me = Message.builder()
+                            //.setTopic("/topics/"+mie.getCode())
+                            .setToken(ct.getFcmtoken())
+                            .putData("objet", objet)  // COMMANDE en cours de traiement
+                            .putData("dates", dates)
+                            .putData("heure", heure)
+                            .build();
+                    FirebaseMessaging.getInstance().send(me);
+                    sendFcm = true;
+                }
+            }
+
+            if(!sendFcm){
+                if((ct.getEmail() != null) && !ct.getEmail().isEmpty()){
+                    Parametres parametres = parametresRepository.findByIdparam(1);
+                    if(parametres != null) {
+                        if (parametres.getAlertemail() == 1) {
+                            MimeMessage mimeMessage = emailSender.createMimeMessage();
+                            try {
+                                MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true,
+                                        "utf-8");
+
+                                String sujet = "", message="";
+                                if(objet.equals("1")){
+                                    sujet = "Validation de votre commande";
+                                    message = "<h2>Votre commande a été validée. \n " +
+                                            "Elle vous sera sous peu expédiée !</h2>";
+                                }
+                                else if(objet.equals("2")){
+                                    sujet = "Livraison de votre commande encours";
+                                    message = "<h2>Votre commande est en cours de livraison. \n " +
+                                            "Vous la recevrez dans peu de temps !</h2>";
+                                }
+                                else if(objet.equals("3")){
+                                    sujet = "Commande livrée";
+                                    message = "<h2>Votre commande vous a été livrée. \n " +
+                                            "Nous vous remercions pour votre confiance !</h2>";
+                                }
+                                //
+                                helper.setText(message, true);
+                                helper.setTo(ct.getEmail());
+                                helper.setSubject(sujet);
+                                //helper.setBcc(carboncopie);
+                                helper.setFrom(expediteur);
+                                emailSender.send(mimeMessage);
+                            } catch (Exception exc) {
+                                //
+                            }
+                        }
+                    }
+                }
+            }
+
             //System.out.println("Notif envoyé");
         } catch (FirebaseMessagingException e) {
             //System.out.println("FirebaseMessagingException : "+e.toString());

@@ -829,18 +829,8 @@ public class ApiCallController {
             ge = new Grossiste();
             // Create the CODE :
             String tpDenom = denomination.substring(0,3);
-            int min = 100; // Minimum value of range
-            int max = 500; // Maximum value of range
-            // check if that one does not exist
-            boolean codeExist = true;
-            while (codeExist){
-                int random_int = (int)Math.floor(Math.random() * (max - min + 1) + min);
-                if(grossisteRepository.findByCode(tpDenom+String.valueOf(random_int))
-                        != null){
-                    ge.setCode(tpDenom+String.valueOf(random_int));
-                    codeExist = false;
-                }
-            }
+            String dte = new SimpleDateFormat("yyyyMMdd").format(new Date());
+            ge.setCode(tpDenom+dte);
         }
         ge.setDenomination(denomination.trim());
         ge.setContact(contact);
