@@ -146,6 +146,17 @@ public class CommandeController {
         return rn;
     }
 
+    @CrossOrigin("*")
+    @Operation(summary = "Obtenir la liste des paiements pour les grossistes")
+    @GetMapping(value="/getgrossistepaiement")
+    private List<BeanPaiementGrossiste> getgrossistepaiement(HttpServletRequest request){
+        ModelMapper modelMapper = new ModelMapper();
+        Utilisateur ur = outil.getCompanyUser(request);
+        return commandeRepository.findAllPaiementGrossiste(ur.getIdent()).
+                stream().map(d -> modelMapper.map(d, BeanPaiementGrossiste.class))
+                .collect(Collectors.toList());
+    }
+
 
     @CrossOrigin("*")
     @Operation(summary = "Obtenir la liste des commande en cours")

@@ -3,6 +3,7 @@ package com.ankk.ecommerce.repositories;
 import com.ankk.ecommerce.beans.BeanInterfaceCommandeProjection;
 import com.ankk.ecommerce.beans.BeanOngoingCommande;
 import com.ankk.ecommerce.beans.BeanOngoingCommandeProjection;
+import com.ankk.ecommerce.beans.BeanPaiementGrossisteProjection;
 import com.ankk.ecommerce.models.Commande;
 import com.ankk.ecommerce.models.Utilisateur;
 import org.springframework.data.jpa.repository.Query;
@@ -25,6 +26,15 @@ public interface CommandeRepository extends CrudRepository<Commande, Integer> {
             "c.ident = ?2 group by b.idcli, a.dates, a.heure,b.nom,b.prenom,b.numero",
             nativeQuery = true)
     List<BeanOngoingCommandeProjection> findAllOnGoingCommande(int traite, int ident);
+
+
+    @Query(value = "select f.denomination, c.libelle, b.dates,c.prix, e.prixforfait," +
+            "(c.prix-e.prixforfait) as apayer from client a inner join commande b on a.idcli=" +
+            "b.iduser inner join article c on c.idart = b.idart inner join liengrossiste d on " +
+            "d.idart=c.idart inner join liengrossiste e on e.ident=c.ident inner join grossiste f " +
+            "on f.code=a.codeinvitation where c.ident = ?1",
+            nativeQuery = true)
+    List<BeanPaiementGrossisteProjection> findAllPaiementGrossiste(int ident);
 
 
     // Liste des commandes pau 'CLIENT' :

@@ -47,6 +47,8 @@ public class ApiCallController {
     @Autowired
     LienpromotionRepository lienpromotionRepository;
     @Autowired
+    LiengrossisteRepository liengrossisteRepository;
+    @Autowired
     ProfilRepository profilRepository;
     @Autowired
     GrossisteRepository grossisteRepository;
@@ -703,6 +705,17 @@ public class ApiCallController {
                 rt.setClt(ct);
             }
         }
+
+        if(!ct.getCodeinvitation().trim().isEmpty()){
+            // Verify that CODEINVITATION EXISTS if keyed :
+            if(grossisteRepository.findByCode(ct.getCodeinvitation().trim()) == null){
+                // Error on GROSSISTE CODE :
+                rt = new BeanCustomerCreation();
+                rt.setFlag(2); //
+                rt.setClt(ct);
+            }
+        }
+
         if(rt == null){
             // Process :
             rt = new BeanCustomerCreation();
@@ -718,15 +731,19 @@ public class ApiCallController {
             if(ct.getIdcli() == 0) {
                 clt.setFcmtoken(ct.getFcmtoken());
             }
+            // update this if needed :
+            clt.setCodeinvitation(ct.getCodeinvitation());
             String heure = new SimpleDateFormat("HH:mm").format(new Date());
             clt.setPwd(heure.replace(":", ""));
 
             //
             rt.setClt( clientRepository.save(clt));
-            rt.setFlag(2);
-            // Send Email to user :
-            tachesService.mailCreation("Création de compte", ct.getEmail(),
-                    heure.replace(":", ""));
+            rt.setFlag(3);
+            if(ct.getIdcli() == 0) {
+                // Send Email to user :
+                tachesService.mailCreation("Création de compte", ct.getEmail(),
+                        heure.replace(":", ""));
+            }
         }
 
         //
@@ -754,6 +771,7 @@ public class ApiCallController {
             ct.setAdresse("");
             ct.setFcmtoken("");
             ct.setPwd("");
+            ct.setCodeinvitation("");
             rt.setClt(ct);
         }
         else {
@@ -811,18 +829,34 @@ public class ApiCallController {
             ge = new Grossiste();
             // Create the CODE :
             String tpDenom = denomination.substring(0,3);
-            String dte = new SimpleDateFormat("yyyyMMdd").format(new Date());
-            ge.setCode(tpDenom+dte);
+            int min = 100; // Minimum value of range
+            int max = 500; // Maximum value of range
+            // check if that one does not exist
+            boolean codeExist = true;
+            while (codeExist){
+                int random_int = (int)Math.floor(Math.random() * (max - min + 1) + min);
+                if(grossisteRepository.findByCode(tpDenom+String.valueOf(random_int))
+                        != null){
+                    ge.setCode(tpDenom+String.valueOf(random_int));
+                    codeExist = false;
+                }
+            }
         }
         ge.setDenomination(denomination.trim());
         ge.setContact(contact);
-        ge.setEmail(email);
-        grossisteRepository.save(ge);
-
-        rse.setElement("ok");
-        rse.setProfil("ok");
-        rse.setIdentifiant("ok");
-
+        // Check that :
+        if((grossisteRepository.findByEmail(email) != null) && (ident==0)){
+            rse.setElement("pok");
+            rse.setProfil("pok");
+            rse.setIdentifiant("pok");
+        }
+        else{
+            rse.setElement("ok");
+            rse.setProfil("ok");
+            rse.setIdentifiant("ok");
+            ge.setEmail(email);
+            grossisteRepository.save(ge);
+        }
         return rse;
     }
 
@@ -987,6 +1021,60 @@ public class ApiCallController {
         dl.setLibelle(libelle);
 
         fileService.upload(multipartFile, libelle, 3, 0, null, dl);
+        Reponse re = new Reponse();
+        re.setElement("OK");
+        re.setIdentifiant("OK");
+        re.setProfil("OK");
+        return  re;
+    }
+
+
+    @CrossOrigin("*")
+    @PostMapping("/savegrossisteprice")
+    public Reponse savegrossisteprice(
+        @RequestParam(name="id") long idlgo,
+        @RequestParam(name="idart") Integer idart,
+        @RequestParam(name="idgro") Integer idgro,
+        @RequestParam(name="prixforfait") Integer prixforfait,
+        HttpServletRequest request
+    ) {
+
+        String identifiant = getBackUserConnectedName(request);
+
+        //
+        EntityManager emr = emf.createEntityManager();
+        emr.getTransaction().begin();
+
+        // Demande de Rapports :
+        StoredProcedureQuery procedureQuery = emr
+                .createStoredProcedureQuery("findUserByIdentifier");
+        procedureQuery.registerStoredProcedureParameter("id",
+                String.class, ParameterMode.IN);
+        procedureQuery.setParameter("id", identifiant);
+        procedureQuery.registerStoredProcedureParameter("keyword",
+                String.class, ParameterMode.IN);
+        procedureQuery.setParameter("keyword", "K8_jemange");
+        List<Object[]> resultat = procedureQuery.getResultList();
+
+        // Close :
+        emr.getTransaction().commit();
+        emr.close();
+
+        Utilisateur ur = null;
+        if(resultat.size() > 0) {
+            ur = utilisateurRepository.findByIdentifiant(String.valueOf(resultat.get(0)[1]));
+        }
+
+        // Find
+        Liengrossiste lte = liengrossisteRepository
+                .findByIdlgo(idlgo)
+                .orElseGet(Liengrossiste::new);
+        lte.setIdent(ur.getIdent());
+        lte.setIdart(idart);
+        lte.setIdgro(idgro);
+        lte.setPrixforfait(prixforfait);
+        liengrossisteRepository.save(lte);
+
         Reponse re = new Reponse();
         re.setElement("OK");
         re.setIdentifiant("OK");
@@ -1387,6 +1475,63 @@ public class ApiCallController {
         return rse;
     }
 
+    //
+    @CrossOrigin("*")
+    @GetMapping(value="/getgrossisteliendata")
+    private List<BeanDataLienGrossiste> getgrossisteliendata(
+            HttpServletRequest request
+    ) {
+        //
+        String identifiant = getBackUserConnectedName(request);
+        //
+        EntityManager emr = emf.createEntityManager();
+        emr.getTransaction().begin();
+
+        // Demande de Rapports :
+        StoredProcedureQuery procedureQuery = emr
+                .createStoredProcedureQuery("findUserByIdentifier");
+        procedureQuery.registerStoredProcedureParameter("id",
+                String.class, ParameterMode.IN);
+        procedureQuery.setParameter("id", identifiant);
+        procedureQuery.registerStoredProcedureParameter("keyword",
+                String.class, ParameterMode.IN);
+        procedureQuery.setParameter("keyword", "K8_jemange");
+        List<Object[]> resultat = procedureQuery.getResultList();
+
+        // Close :
+        emr.getTransaction().commit();
+        emr.close();
+
+        Utilisateur ur = null;
+        if(resultat.size() > 0) {
+            ur = utilisateurRepository.findByIdentifiant(String.valueOf(resultat.get(0)[1]));
+        }
+
+        //
+        List<BeanDataLienGrossiste> ret = new ArrayList<>();
+        List<Liengrossiste> liste =
+            liengrossisteRepository.findAllByIdent(ur.getIdent());
+        liste.forEach(
+            d -> {
+                // Article :
+                Article ae = articleRepository.findByIdart(d.getIdart());
+                Grossiste ge = grossisteRepository.findByIdgro(Long.valueOf(d.getIdgro()));
+                BeanDataLienGrossiste be = new BeanDataLienGrossiste();
+                be.setArticle(ae.getLibelle());
+                be.setGrossiste(ge.getDenomination());
+                be.setIdart(ae.getIdart());
+                be.setIdgro(ge.getIdgro());
+                be.setPrix(ae.getPrix());
+                be.setPrixforfait(d.getPrixforfait());
+                be.setIdlgo(d.getIdlgo());
+                ret.add(be);
+            }
+        );
+
+        return ret;
+    }
+
+
     /* enregistrerUser */
     @CrossOrigin("*")
     @GetMapping(value="/getcompanyarticles")
@@ -1421,7 +1566,8 @@ public class ApiCallController {
 
         // Now pick articles :
         List<Beanarticle> ret = new ArrayList<>();
-        List<Article> listArticle = articleRepository.findAllByIdent(ur.getIdent());
+        List<Article> listArticle = articleRepository.
+                findAllByIdentOrderByLibelleAsc(ur.getIdent());
         listArticle.forEach(
                 d -> {
                     Beanarticle be = new Beanarticle();
@@ -1568,62 +1714,6 @@ public class ApiCallController {
         }
         return username;
     }
-
-
-    /*
-    @CrossOrigin("*")
-    @GetMapping(value="/getcompanyarticles")
-    private List<Beanarticle> getcompanyarticles(
-            HttpServletRequest request
-    ) {
-        //
-        String identifiant = getBackUserConnectedName(request);
-        //
-        EntityManager emr = emf.createEntityManager();
-        emr.getTransaction().begin();
-
-        // Demande de Rapports :
-        StoredProcedureQuery procedureQuery = emr
-                .createStoredProcedureQuery("findUserByIdentifier");
-        procedureQuery.registerStoredProcedureParameter("id",
-                String.class, ParameterMode.IN);
-        procedureQuery.setParameter("id", identifiant);
-        procedureQuery.registerStoredProcedureParameter("keyword",
-                String.class, ParameterMode.IN);
-        procedureQuery.setParameter("keyword", "K8_jemange");
-        List<Object[]> resultat = procedureQuery.getResultList();
-
-        // Close :
-        emr.getTransaction().commit();
-        emr.close();
-
-        Utilisateur ur = null;
-        if(resultat.size() > 0) {
-            ur = utilisateurRepository.findByIdentifiant(String.valueOf(resultat.get(0)[1]));
-        }
-
-        // Now pick articles :
-        List<Beanarticle> ret = new ArrayList<>();
-        List<Article> listArticle = articleRepository.findAllByIdent(ur.getIdent());
-        listArticle.forEach(
-                d -> {
-                    Beanarticle be = new Beanarticle();
-                    be.setIdart(d.getIdart());
-                    be.setLibelle(d.getLibelle());
-                    be.setPrix(d.getPrix());
-                    be.setLienweb(d.getLienweb());
-                    // DETAIL :
-                    Detail dl = detailRepository.findByIddet(d.getIddet());
-                    be.setAppartenance(dl.getLibelle());
-                    //
-                    be.setQuantite(d.getQuantite());
-                    be.setChoix(d.getChoix());
-                    ret.add(be);
-                }
-        );
-
-        return ret;
-    }*/
 
 
     /*  */

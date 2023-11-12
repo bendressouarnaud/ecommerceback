@@ -39,4 +39,7 @@ public class Client {
 
     @Column(name = "pwd")
     private String pwd;
+
+    @Column(name = "codeinvitation")
+    private String codeinvitation;
 }

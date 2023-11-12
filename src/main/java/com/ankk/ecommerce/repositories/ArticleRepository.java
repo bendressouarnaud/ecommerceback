@@ -11,6 +11,7 @@ import java.util.List;
 public interface ArticleRepository extends CrudRepository<Article, Integer> {
 
     List<Article> findAllByIdent(int ident);
+    List<Article> findAllByIdentOrderByLibelleAsc(int ident);
     List<Article> findAllByIdartIn(List<Integer> idart);
     List<Article> findAllByOrderByLibelleAsc();
     List<Article> findAllByIdentAndIddet(int ident, int iddet);
