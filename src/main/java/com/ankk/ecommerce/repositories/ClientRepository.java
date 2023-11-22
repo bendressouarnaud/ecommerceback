@@ -9,6 +9,7 @@ import java.util.List;
 public interface ClientRepository extends CrudRepository<Client, Integer> {
 
     List<Client> findAll();
+    List<Client> findAllByOrderByNomAsc();
     Client findByEmail(String email);
     Client findByEmailAndPwd(String email, String pwd);
     @Transactional

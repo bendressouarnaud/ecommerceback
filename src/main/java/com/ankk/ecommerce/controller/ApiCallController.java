@@ -247,6 +247,13 @@ public class ApiCallController {
         return grossisteRepository.findAllByOrderByDenominationAsc();
     }
 
+    //
+    @CrossOrigin("*")
+    @GetMapping(value="/getAllClients")
+    private List<Client> getAllClients(){
+        return clientRepository.findAllByOrderByNomAsc();
+    }
+
     @CrossOrigin("*")
     @GetMapping(value={"/getAllDetails","/getmobileAllDetails"})
     private List<Detail> getAllDetails(){
