@@ -758,6 +758,30 @@ public class ApiCallController {
     }
 
 
+    // Get ARTICLES based on iddet :
+    @CrossOrigin("*")
+    @PostMapping(value={"/deleteaccountfromphone"})
+    private RequestBean deleteaccountfromphone(@RequestBody RequestBean rn){
+        // Set Return Object :
+        RequestBean rNew = new RequestBean();
+        rNew.setLib("---");
+        try {
+            // Check id before :
+            if (rn.getId() > 0) {
+                clientRepository.deleteByIdcli(rn.getId());
+                rNew.setId(1);
+            } else {
+                rNew.setId(0);
+            }
+        }
+        catch (Exception e){
+            rNew.setId(0);
+        }
+        return rNew;
+    }
+
+
+
     @CrossOrigin("*")
     @PostMapping(value={"/authenicatemobilecustomer"})
     private BeanCustomerAuth authenicatemobilecustomer(@RequestBody BeanAuthentification data){

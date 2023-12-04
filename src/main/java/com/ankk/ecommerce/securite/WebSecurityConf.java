@@ -60,7 +60,7 @@ public class WebSecurityConf extends WebSecurityConfigurerAdapter {
                 "/getmobilealldetailsbyidspr","/getmobilearticleinformationbyidart",
                 "/lookforwhatuserrequested",
                         "/enregistrerPartenaire",
-                "/getarticledetailspanier",
+                "/getarticledetailspanier","/deleteaccountfromphone",
                 "/v3/**","/swagger-ui**","/swagger-ui/**"
                 ).permitAll().anyRequest().authenticated()
                 .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
