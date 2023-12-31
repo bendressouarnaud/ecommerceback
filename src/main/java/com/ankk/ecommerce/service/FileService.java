@@ -154,7 +154,7 @@ public class FileService {
         //return String.format("DOWNLOAD_URL", URLEncoder.encode(fileName, StandardCharsets.UTF_8));
     }
 
-    private File convertToFile(MultipartFile multipartFile, String fileName) throws IOException {
+    public File convertToFile(MultipartFile multipartFile, String fileName) throws IOException {
         File tempFile = new File(fileName);
         try (FileOutputStream fos = new FileOutputStream(tempFile)) {
             fos.write(multipartFile.getBytes());

@@ -58,7 +58,7 @@ public class WebSecurityConf extends WebSecurityConfigurerAdapter {
                 "/sendmobilecomment","/authenicatemobilecustomer","/getarticledetails",
                 "/getmobilehistoricalcommande","/getcustomercommandearticle",
                 "/getmobilealldetailsbyidspr","/getmobilearticleinformationbyidart",
-                "/lookforwhatuserrequested",
+                "/lookforwhatuserrequested","/sendWordToRead",
                         "/enregistrerPartenaire",
                 "/getarticledetailspanier","/deleteaccountfromphone",
                 "/v3/**","/swagger-ui**","/swagger-ui/**"
