@@ -7,5 +7,5 @@ import java.util.List;
 
 @Data
 public class BeanLigneOccurence {
-    String page, ligne, contenu;
+    String page, ligne, contenu, titre;
 }
