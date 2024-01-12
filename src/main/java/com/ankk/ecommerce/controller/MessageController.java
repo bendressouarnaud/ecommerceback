@@ -112,10 +112,17 @@ public class MessageController {
     @PostConstruct
     private void initializeObjects() {
         try {
-            ClassLoader loader = Thread.currentThread().getContextClassLoader();
-            URL url = loader.getResource("pdf");
-            String path = url.getPath();
-            fichiers = new File(path).listFiles();
+
+            File directoryPath = new File("C:\\Users\\ngbandamakonan\\Documents\\pdf");
+            //List of all files and directories
+            //File[] filesList = directoryPath.listFiles();
+
+            //ClassLoader loader = Thread.currentThread().getContextClassLoader();
+            //URL url = loader.getResource("pdf");
+            //String path = url.getPath();
+            //fichiers = new File(path).listFiles();
+            fichiers = directoryPath.listFiles();
+            System.out.println("Fichiers : "+ String.valueOf(fichiers.length));
         } catch (Exception e) {
             System.out.println("Exception : "+e.toString());
         }
