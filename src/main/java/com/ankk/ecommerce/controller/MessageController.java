@@ -25,8 +25,10 @@ import javax.persistence.ParameterMode;
 import javax.persistence.StoredProcedureQuery;
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -55,7 +57,8 @@ public class MessageController {
         List<BeanLigneOccurence> retour = new ArrayList<>();
         try {
             for(File file : fichiers) {
-                PdfReader reader = new PdfReader(file.getAbsolutePath().toString());
+                //FileInputStream()
+                PdfReader reader = new PdfReader(Files.newInputStream(Paths.get(file.getAbsolutePath())));//.getAbsolutePath().toString());
                 int pages = reader.getNumberOfPages();
 
                 for (int i = 1; i <= pages; i++) {
@@ -112,17 +115,8 @@ public class MessageController {
     @PostConstruct
     private void initializeObjects() {
         try {
-
-            File directoryPath = new File("C:\\Users\\ngbandamakonan\\Documents\\pdf");
-            //List of all files and directories
-            //File[] filesList = directoryPath.listFiles();
-
-            //ClassLoader loader = Thread.currentThread().getContextClassLoader();
-            //URL url = loader.getResource("pdf");
-            //String path = url.getPath();
-            //fichiers = new File(path).listFiles();
-            fichiers = directoryPath.listFiles();
-            System.out.println("Fichiers : "+ String.valueOf(fichiers.length));
+            //File directoryPath = new File("C:\\Users\\ngbandamakonan\\Documents\\pdf");
+            //fichiers = directoryPath.listFiles();
         } catch (Exception e) {
             System.out.println("Exception : "+e.toString());
         }
