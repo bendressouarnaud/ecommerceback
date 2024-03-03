@@ -4,6 +4,7 @@ import com.ankk.ecommerce.beans.*;
 import com.ankk.ecommerce.mesobjets.TachesService;
 import com.ankk.ecommerce.models.*;
 import com.ankk.ecommerce.outils.Outil;
+import com.ankk.ecommerce.projections.BeanArticleDiscountedProjection;
 import com.ankk.ecommerce.repositories.*;
 import com.ankk.ecommerce.securite.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -535,5 +536,28 @@ public class CommandeController {
         RequeteBean rn = new RequeteBean();
         rn.setIdprd(1);
         return rn;
+    }
+
+    @CrossOrigin("*")
+    @Operation(summary = "Obtenir la liste des articles en PROMOTION")
+    @GetMapping(value="/getarticlesdiscounted")
+    private List<BeanArticleDiscounted> getarticlesdiscounted(HttpServletRequest request){
+        ModelMapper modelMapper = new ModelMapper();
+        Utilisateur ur = outil.getCompanyUser(request);
+        return articleRepository.findAllDiscountedArticle().
+                stream().map(d -> modelMapper.map(d, BeanArticleDiscounted.class))
+                .collect(Collectors.toList());
+    }
+
+    @CrossOrigin("*")
+    @Operation(summary = "Obtenir la liste des commandes par entreprise")
+    @PostMapping(value="/getmobilearticlebookedbycompany")
+    private List<BeanArticleBooked> getmobilearticlebookedbycompany(
+            @RequestBody RequeteBean requeteBean,
+            HttpServletRequest request){
+        ModelMapper modelMapper = new ModelMapper();
+        return commandeRepository.findAllCompanyCommande(requeteBean.getIdprd()).
+                stream().map(d -> modelMapper.map(d, BeanArticleBooked.class))
+                .collect(Collectors.toList());
     }
 }

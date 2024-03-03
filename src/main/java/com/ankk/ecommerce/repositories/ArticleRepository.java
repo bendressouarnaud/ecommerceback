@@ -1,8 +1,10 @@
 package com.ankk.ecommerce.repositories;
 
+import com.ankk.ecommerce.beans.BeanInterfaceCommandeProjection;
 import com.ankk.ecommerce.beans.Beansousproduitarticle;
 import com.ankk.ecommerce.models.Article;
 import com.ankk.ecommerce.models.Detail;
+import com.ankk.ecommerce.projections.BeanArticleDiscountedProjection;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
@@ -31,5 +33,11 @@ public interface ArticleRepository extends CrudRepository<Article, Integer> {
             "sousproduit a inner join detail b on a.idspr=b.idspr inner join article c on " +
             "c.iddet=b.iddet where a.idprd  = ?1 order by idart desc", nativeQuery = true)
     List<Beansousproduitarticle> findAllArticlesByIdprod(int idprd);*/
+
+    @Query(value = "select distinct a.idart, a.libelle, a.lienweb,c.modepourcentage,c.reduction from " +
+            "article a inner join lienpromotion b on a.idart=b.idart inner join promotion c on c.idprn " +
+            "=b.idpro where b.etat=1",
+            nativeQuery = true)
+    List<BeanArticleDiscountedProjection> findAllDiscountedArticle();
 
 }

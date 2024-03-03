@@ -15,4 +15,5 @@ public class Beanarticledatahistory {
     int prix, reduction, nombrearticle, autorisecommentaire, commentaireexiste;
     int iddet, note;
     int trackVetement, taille;
+    int modepourcentage, prixpromo;
 }

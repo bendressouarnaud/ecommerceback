@@ -539,7 +539,7 @@ public class ApiCallController {
                     // For each ARTICLE, pick the number of those bought :
                     List<Achat> articleAchete = achatRepository.findAllByIdartAndActif(d.getIdart(), 0);
                     BeanResumeArticleDetail bl = new BeanResumeArticleDetail();
-                    Beanarticledetail be = new Beanarticledetail();
+                    Beanarticledetailnew be = new Beanarticledetailnew();
                     be.setIddet(d.getIddet());
                     be.setIdart(d.getIdart());
                     be.setLienweb(d.getLienweb());
@@ -549,6 +549,8 @@ public class ApiCallController {
                     Lienpromotion ln = lienpromotionRepository.findByIdartAndEtat(d.getIdart(), 1);
                     Promotion pn = promotionRepository.findByIdprn(ln != null ? ln.getIdpro() : 0);
                     be.setReduction(pn != null ? pn.getReduction() : 0);
+                    be.setModepourcentage(pn != null ? pn.getModepourcentage() : 0);
+                    be.setPrixpromo(pn != null ? pn.getPrix() : 0);
                     // Set NOTE :
                     List<Commentaire> comments = commentaireRepository.findAllByIdart(d.getIdart());
                     double noteArt = 0;
@@ -587,7 +589,7 @@ public class ApiCallController {
                     // For each ARTICLE, pick the number of those bought :
                     List<Achat> articleAchete = achatRepository.findAllByIdartAndActif(d.getIdart(), 0);
                     BeanResumeArticleDetail bl = new BeanResumeArticleDetail();
-                    Beanarticledetail be = new Beanarticledetail();
+                    Beanarticledetailnew be = new Beanarticledetailnew();
                     be.setIddet(d.getIddet());
                     be.setIdart(d.getIdart());
                     be.setLienweb(d.getLienweb());
@@ -667,6 +669,8 @@ public class ApiCallController {
                 Lienpromotion ln = lienpromotionRepository.findByIdartAndEtat(d.getIdart(), 1);
                 Promotion pn = promotionRepository.findByIdprn(ln != null ? ln.getIdpro() : 0);
                 be.setReduction(pn != null ? pn.getReduction() : 0);
+                be.setModepourcentage(pn != null ? pn.getModepourcentage() : 0);
+                be.setPrixpromo(pn != null ? pn.getPrix() : 0);
                 be.setIdart(d.getIdart());
                 be.setRestant(d.getQuantite());
                 // Comments :
@@ -785,14 +789,17 @@ public class ApiCallController {
     @CrossOrigin("*")
     @PostMapping(value={"/authenicatemobilecustomer"})
     private BeanCustomerAuth authenicatemobilecustomer(@RequestBody BeanAuthentification data){
-
         // Check
         BeanCustomerAuth rt = new BeanCustomerAuth();
         Client ct = clientRepository.findByEmailAndPwd(data.getMail().trim(), data.getPwd().trim());
         if(ct == null){
-            rt.setFlag(0);
+            // Look for Utilisateur :
+            Utilisateur ur = utilisateurRepository.findByEmailAndContact(
+                    data.getMail().trim(), data.getPwd().trim());
+            rt.setFlag(ur != null ? 2 : 0);
             ct = new Client();
-            ct.setIdcli(0);
+            // Use this to pull REQUEST from MOBILE SIDE
+            ct.setIdcli(ur != null ? ur.getIdent() : 0);
             ct.setCommune(0);
             ct.setGenre(0);
             ct.setNom("");
@@ -1296,6 +1303,8 @@ public class ApiCallController {
                                  @RequestParam(name="datefin") String datefin,
                                  @RequestParam(name="libellepromotion") String libellepromotion,
                                  @RequestParam(name="reduction") Integer reduction,
+                                 @RequestParam(name="pourcentage") Integer pourcentage,
+                                 @RequestParam(name="prix") Integer prix,
                                  HttpServletRequest request
     ) {
 
@@ -1331,6 +1340,8 @@ public class ApiCallController {
         pn.setLibelle(libellepromotion);
         pn.setIdent(ur.getIdent());
         pn.setReduction(reduction);
+        pn.setModepourcentage(pourcentage);
+        pn.setPrix(prix);
         //
         try {
             Date dateDeb = new SimpleDateFormat("yyyy-MM-dd").
@@ -1668,6 +1679,8 @@ public class ApiCallController {
         Promotion pn = promotionRepository.findByIdprn(ln != null ? ln.getIdpro() : 0);
         by.setReduction(pn != null ? pn.getReduction() : 0);
         by.setNombrearticle( ale.getQuantite() );
+        by.setModepourcentage(pn != null ? pn.getModepourcentage() : 0);
+        by.setPrixpromo(pn != null ? pn.getPrix() : 0);
         //by.setNombrearticle(ale.getQuantite());
         //
         by.setImages(imagesSup);
@@ -1900,6 +1913,8 @@ public class ApiCallController {
                     bn.setDatedebut(dte);
                     dte = new SimpleDateFormat("yyyy-MM-dd").format(d.getDatefin());
                     bn.setDatefin(dte);
+                    bn.setModepourcentage(d.getModepourcentage());
+                    bn.setPrix(d.getPrix());
                     lesData.add(bn);
                 }
             );
@@ -1974,7 +1989,7 @@ public class ApiCallController {
                     // For each ARTICLE, pick the number of those bought :
                     List<Achat> articleAchete = achatRepository.findAllByIdartAndActif(d.getIdart(), 0);
                     BeanResumeArticleDetail bl = new BeanResumeArticleDetail();
-                    Beanarticledetail be = new Beanarticledetail();
+                    Beanarticledetailnew be = new Beanarticledetailnew();
                     be.setIddet(d.getIddet());
                     be.setIdart(d.getIdart());
                     be.setLienweb(d.getLienweb());
@@ -2127,7 +2142,7 @@ public class ApiCallController {
                     // For each ARTICLE, pick the number of those bought :
                     List<Achat> articleAchete = achatRepository.findAllByIdartAndActif(d.getIdart(), 0);
                     BeanResumeArticleDetail bl = new BeanResumeArticleDetail();
-                    Beanarticledetail be = new Beanarticledetail();
+                    Beanarticledetailnew be = new Beanarticledetailnew();
                     be.setIddet(d.getIddet());
                     be.setIdart(d.getIdart());
                     be.setLienweb(d.getLienweb());
@@ -2137,6 +2152,8 @@ public class ApiCallController {
                     Lienpromotion ln = lienpromotionRepository.findByIdartAndEtat(d.getIdart(), 1);
                     Promotion pn = promotionRepository.findByIdprn(ln != null ? ln.getIdpro() : 0);
                     be.setReduction(pn != null ? pn.getReduction() : 0);
+                    be.setModepourcentage(pn != null ? pn.getModepourcentage() : 0);
+                    be.setPrixpromo(pn != null ? pn.getPrix() : 0);
                     // Set NOTE :
                     List<Commentaire> comments = commentaireRepository.findAllByIdart(d.getIdart());
                     double noteArt = 0;

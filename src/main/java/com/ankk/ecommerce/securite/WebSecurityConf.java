@@ -58,9 +58,9 @@ public class WebSecurityConf extends WebSecurityConfigurerAdapter {
                 "/sendmobilecomment","/authenicatemobilecustomer","/getarticledetails",
                 "/getmobilehistoricalcommande","/getcustomercommandearticle",
                 "/getmobilealldetailsbyidspr","/getmobilearticleinformationbyidart",
-                "/lookforwhatuserrequested","/sendWordToRead",
+                "/lookforwhatuserrequested","/sendWordToRead","/getmobilearticlebookedbycompany",
                         "/enregistrerPartenaire",
-                "/getarticledetailspanier","/deleteaccountfromphone",
+                "/getarticledetailspanier","/deleteaccountfromphone","/getarticlesdiscounted",
                 "/v3/**","/swagger-ui**","/swagger-ui/**"
                 ).permitAll().anyRequest().authenticated()
                 .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);

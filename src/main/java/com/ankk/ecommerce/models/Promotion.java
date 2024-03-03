@@ -33,4 +33,10 @@ public class Promotion {
     @Column(name = "etat")
     private int etat;
 
+    @Column(name = "modepourcentage")
+    private int modepourcentage;
+
+    @Column(name = "prix")
+    private int prix;
+
 }

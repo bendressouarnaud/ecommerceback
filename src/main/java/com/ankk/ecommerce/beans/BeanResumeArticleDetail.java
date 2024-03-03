@@ -6,5 +6,5 @@ import lombok.Data;
 public class BeanResumeArticleDetail {
     int totalcomment;
     double noteart;
-    Beanarticledetail beanarticle;
+    Beanarticledetailnew beanarticle;
 }

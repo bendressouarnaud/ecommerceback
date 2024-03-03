@@ -5,6 +5,6 @@ import lombok.Data;
 @Data
 public class Beanpromotion {
     long idprn;
-    int reduction;
+    int reduction, modepourcentage, prix;
     String libelle, datedebut,datefin;
 }

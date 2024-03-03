@@ -6,6 +6,7 @@ import com.ankk.ecommerce.beans.BeanOngoingCommandeProjection;
 import com.ankk.ecommerce.beans.BeanPaiementGrossisteProjection;
 import com.ankk.ecommerce.models.Commande;
 import com.ankk.ecommerce.models.Utilisateur;
+import com.ankk.ecommerce.projections.BeanArticleBookedProjection;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
@@ -44,5 +45,13 @@ public interface CommandeRepository extends CrudRepository<Commande, Integer> {
             "where a.iduser = ?1 group by a.iduser, a.dates, a.heure",
             nativeQuery = true)
     List<BeanInterfaceCommandeProjection> findAllCustomerCommande(int idcl);
+
+
+    @Query(value = "select a.dates,a.heure,a.iduser,c.nom,c.prenom,sum(a.total) as totaux " +
+            "from commande a inner join article b on a.idart = b.idart inner join client c on " +
+            "c.idcli=a.iduser where b.ident = ?1 group by a.dates,a.heure,a.iduser,c.nom,c.prenom " +
+            "order by a.dates desc, a.heure desc",
+            nativeQuery = true)
+    List<BeanArticleBookedProjection> findAllCompanyCommande(int company);
 
 }

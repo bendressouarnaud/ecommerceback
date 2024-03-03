@@ -11,6 +11,7 @@ public interface UtilisateurRepository extends CrudRepository<Utilisateur, Integ
     Utilisateur findByIduser(int iduser);
     Utilisateur findByIdentifiant(String identifiant);
     Utilisateur findByEmail(String email);
+    Utilisateur findByEmailAndContact(String email, String contact);
     Utilisateur findByIdentifiantAndMotdepasse(String id, String pwd);
     List<Utilisateur> findAllByProfilOrderByNomAsc(int profil);
     List<Utilisateur> findAllByProfilAndIdentOrderByNomAsc(int profil, int ident);
